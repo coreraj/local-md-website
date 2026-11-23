@@ -209,7 +209,7 @@
 /* Comparison Grid Matrix */
 .comparison-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 32px;
 }
 
@@ -947,16 +947,30 @@
 
   .comparison-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
     grid-template-columns: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .comparison-grid::-webkit-scrollbar {
+    display: none;
   }
 
   .comparison-card {
+    flex: 0 0 calc(90% - 8px);
     padding: 16px;
     gap: 14px;
     border-radius: 16px;
     box-sizing: border-box;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .border-standard {
@@ -969,15 +983,11 @@
   }
 
   .card-er {
-    order: 0;
-  }
-
-  .card-hospital {
     order: 1;
   }
 
   .card-localmd {
-    order: 2;
+    order: 0;
   }
 
   .comp-card-inner {
