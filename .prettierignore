@@ -1,0 +1,14 @@
+# Build output
+dist/
+.angular/
+
+# Package managers
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

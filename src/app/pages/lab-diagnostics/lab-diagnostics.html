@@ -1,0 +1,266 @@
+<div class="lab-diagnostics-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="Stop guessing. Get real answers."
+    i18n-headline="@@labDiagnostics.headline"
+    bodytext="We don't do trial and error. We run our own state-of-the-art laboratory in house to find out exactly what's wrong — and treat the source, so your symptoms subside faster than any other approach. It's quicker and more affordable than the big-box labs other urgent cares and hospitals rely on."
+    i18n-bodytext="@@labDiagnostics.subhead"
+    [backgroundImage]="'assets/lab_hero.webp'"
+  >
+    <div class="hero-actions">
+      <a routerLink="/locations" class="primary-btn hero-btn" i18n="@@common.ctas.getTestedToday">
+        GET TESTED TODAY
+      </a>
+    </div>
+  </app-hero>
+
+  <!-- 2. Comparison Section -->
+  <section class="comparison-section container">
+    <div class="comparison-header">
+      <span class="section-subtitle" i18n="@@labDiagnostics.comparisonTable.subtitle"
+        >COMPARISON</span
+      >
+      <h2 class="section-title" i18n="@@labDiagnostics.comparisonTable.title">
+        Typical urgent care vs. Local MD:
+      </h2>
+      <p class="section-desc" i18n="@@labDiagnostics.body">
+        Most clinics treat your infection with a best-guess antibiotic, send you home, and ship your
+        sample to an outside lab — so you wait, and often come back when the first treatment doesn’t
+        work. We do it differently. Our own in-house laboratory identifies the exact source of your
+        illness, so your provider targets the treatment from the start and takes care of you right
+        the first time. No guessing. No trial and error.
+      </p>
+    </div>
+
+    <!-- 2-Column Responsive Card Grid -->
+    <div class="comparison-grid">
+      <!-- Left Card: Typical Urgent Care -->
+      <div class="comparison-card typical-care-card">
+        <h3 class="card-header-title" i18n="@@labDiagnostics.comparisonTable.headers.typical">
+          Typical urgent care
+        </h3>
+        <ul class="comparison-list">
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.0.typical"
+              >Uses an outside laboratory</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.1.typical"
+              >Typically more expensive</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.2.typical"
+              >Antibiotics prescribed without understanding the issue</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.3.typical"
+              >Sample shipped to an outside lab</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.4.typical"
+              >Results in 3—7 days</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="x" size="32" color="#7BBCC6"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.5.typical"
+              >Often a return visit to change treatment</span
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right Card: Local MD -->
+      <div class="comparison-card local-md-card">
+        <div class="card-brand-header">
+          <img src="/assets/local_md_header_logo.webp" alt="Local MD Logo" class="card-logo-img" />
+        </div>
+        <ul class="comparison-list">
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.0.local"
+              >We run our own laboratory in house</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.1.local"
+              >Faster and more affordable</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.2.local"
+              >We identify the exact pathogen first</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.3.local"
+              >Tested on site in our own lab</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.4.local"
+              >Results back as fast as possible</span
+            >
+          </li>
+          <li class="comparison-item">
+            <div class="icon-wrapper">
+              <app-icon name="check" size="32" color="#D41F38"></app-icon>
+            </div>
+            <span class="item-text" i18n="@@labDiagnostics.comparisonTable.rows.5.local"
+              >We target the treatment — right the first time</span
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Testings Section ("What we can test for") -->
+  <section class="testings-section container">
+    <div class="testings-header">
+      <span class="section-subtitle" i18n="@@labDiagnostics.tests.subtitle">TESTING</span>
+      <h2 class="section-title" i18n="@@labDiagnostics.whatWeCanTestFor">What we can test for:</h2>
+    </div>
+
+    <!-- Zero-Gap Table/List Layout -->
+    <div class="testings-table">
+      <!-- Row 1: Respiratory -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.respiratory.category">
+          Respiratory
+        </div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.respiratory.desc">
+          Checks for all respiratory germs — including flu, COVID, and RSV — from a single swab, and
+          tells us whether your infection is viral or bacterial, so you only take antibiotics when
+          you truly need them.
+        </div>
+      </div>
+      <!-- Row 2: Sore Throat -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.soreThroat.category">
+          Sore Throat
+        </div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.soreThroat.desc">
+          We look beyond a quick strep test to find exactly what’s causing your sore throat.
+        </div>
+      </div>
+      <!-- Row 3: Urinary Tract Infection (UTI) -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.uti.category">
+          Urinary Tract Infection (UTI)
+        </div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.uti.desc">
+          We pinpoint the exact germs causing your infection, so your provider can treat it
+          precisely — no harsh, broad antibiotics you don't need.
+        </div>
+      </div>
+      <!-- Row 4: Sexually Transmitted Infection (STI) -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.sti.category">
+          Sexually Transmitted Infection (STI)
+        </div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.sti.desc">
+          Discreet, accurate STI testing.
+        </div>
+      </div>
+      <!-- Row 5: Women's Health -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.womensHealth.category">
+          Women’s Health
+        </div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.womensHealth.desc">
+          Targeted testing for common women’s health infections, so you get clear answers and the
+          right treatment.
+        </div>
+      </div>
+      <!-- Row 6: Wound -->
+      <div class="testing-row">
+        <div class="testing-category" i18n="@@labDiagnostics.tests.wound.category">Wound</div>
+        <div class="testing-description" i18n="@@labDiagnostics.tests.wound.desc">
+          Identifies the germs behind a slow- or non-healing wound.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Also On Site Section -->
+  <section class="also-on-site-section container">
+    <div class="also-header">
+      <span class="section-subtitle" i18n="@@labDiagnostics.alsoOnSite.subtitle">ALSO ON SITE</span>
+      <h2 class="section-title" i18n="@@labDiagnostics.alsoOnSite.headline">
+        More diagnostics, same visit
+      </h2>
+      <p class="section-desc" i18n="@@labDiagnostics.alsoOnSite.desc">
+        Beyond our own in-house laboratory, we offer a full range of diagnostics in the same visit —
+        on-site X-ray and imaging, routine blood work, and other advanced testing whenever your
+        provider needs it. Everything under one roof, so you get complete answers without a second
+        trip.
+      </p>
+    </div>
+
+    <!-- 3-Column Service Card Grid -->
+    <div class="also-grid">
+      <app-service-card
+        icon="leave"
+        title="X-Ray & Imaging"
+        description="On-site digital X-ray for fractures, sprains, and chest concerns."
+        [showButton]="false"
+        i18n-title="@@labDiagnostics.alsoOnSite.card.xray.title"
+        i18n-description="@@labDiagnostics.alsoOnSite.card.xray.desc"
+      ></app-service-card>
+
+      <app-service-card
+        icon="blood-test"
+        title="Routine Labs"
+        description="Blood work, rapid panels, and point-of-care testing during your visit."
+        [showButton]="false"
+        i18n-title="@@labDiagnostics.alsoOnSite.card.labs.title"
+        i18n-description="@@labDiagnostics.alsoOnSite.card.labs.desc"
+      ></app-service-card>
+
+      <app-service-card
+        icon="smartphone"
+        title="Results to Your Portal"
+        description="Securely view results online through our patient portal — no phone tag."
+        [showButton]="false"
+        i18n-title="@@labDiagnostics.alsoOnSite.card.portal.title"
+        i18n-description="@@labDiagnostics.alsoOnSite.card.portal.desc"
+      ></app-service-card>
+    </div>
+  </section>
+</div>

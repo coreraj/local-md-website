@@ -1,0 +1,138 @@
+<div class="urgent-care-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="Walk-in care, without the wait."
+    i18n-headline="@@urgentCare.headline"
+    bodytext="Skip the ER for everyday illness and injury. No appointment needed — and when you need testing, our own state-of-the-art in-house lab finds out exactly what’s wrong instead of guessing."
+    i18n-bodytext="@@urgentCare.subhead"
+    [backgroundImage]="'assets/urgent_care_hero.webp'"
+  >
+    <div class="hero-actions">
+      <a routerLink="/locations" class="primary-btn hero-btn" i18n="@@header.cta.saveMySpot">
+        SAVE MY SPOT
+      </a>
+    </div>
+  </app-hero>
+
+  <!-- 3. SERVICES Section -->
+  <section class="services-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle" i18n="@@urgentCare.services.subtitle">SERVICES</span>
+        <h2 class="section-title" i18n="@@urgentCare.services.headline">
+          Everything under one roof
+        </h2>
+        <p class="section-desc" i18n="@@urgentCare.body">
+          When you’re sick or hurt, you shouldn’t have to choose between a long ER wait and a clinic
+          that can’t actually figure out what’s wrong. Local MD treats the full range of
+          non-emergency illness and injury — and because we run our own laboratory, we find the
+          source, test, and treat in one place. Walk in any day of the week, or reserve your spot
+          online to spend even less time waiting.
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <!-- Card 1 -->
+        <app-service-card
+          icon="urgent-care"
+          title="Injury care"
+          description="Sprains, strains, cuts, burns, and minor fractures — assessed and treated on site."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.injury.title"
+          i18n-description="@@urgentCare.service.injury.desc"
+        ></app-service-card>
+
+        <!-- Card 2 -->
+        <app-service-card
+          icon="illness"
+          title="Illness treatment"
+          description="Colds, flu, COVID, strep, infections and more, with molecular testing when it counts."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.illness.title"
+          i18n-description="@@urgentCare.service.illness.desc"
+        ></app-service-card>
+
+        <!-- Card 3 -->
+        <app-service-card
+          icon="labb"
+          title="On-site lab testing"
+          description="In-house molecular and rapid testing that pinpoints exactly what's wrong, so you're treated right the first time."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.lab.title"
+          i18n-description="@@urgentCare.service.lab.desc"
+        ></app-service-card>
+
+        <!-- Card 4 -->
+        <app-service-card
+          icon="medical-procedures"
+          title="Minor procedures"
+          description="Laceration repair, splinting, abscess care, foreign-body removal, and more."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.procedures.title"
+          i18n-description="@@urgentCare.service.procedures.desc"
+        ></app-service-card>
+
+        <!-- Card 5 -->
+        <app-service-card
+          icon="pediatric"
+          title="Pediatric care"
+          description="Compassionate walk-in care for kids — illnesses, injuries, and school physicals."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.pediatric.title"
+          i18n-description="@@urgentCare.service.pediatric.desc"
+        ></app-service-card>
+
+        <!-- Card 6 -->
+        <app-service-card
+          icon="exam"
+          title="Physical exams"
+          description="School, sports, DOT and pre-employment physicals, often same day."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.exams.title"
+          i18n-description="@@urgentCare.service.exams.desc"
+        ></app-service-card>
+
+        <!-- Card 7 -->
+        <app-service-card
+          icon="leave"
+          title="X-rays & diagnostics"
+          description="On-site digital imaging so you get answers before you leave."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.diagnostics.title"
+          i18n-description="@@urgentCare.service.diagnostics.desc"
+        ></app-service-card>
+
+        <!-- Card 8 -->
+        <app-service-card
+          icon="urgent-care"
+          title="Vaccinations"
+          description="Flu shots and routine immunizations for the whole family."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.vaccinations.title"
+          i18n-description="@@urgentCare.service.vaccinations.desc"
+        ></app-service-card>
+
+        <!-- Card 9 -->
+        <app-service-card
+          icon="urgent-care"
+          title="Durable medical equipment on hand."
+          description="Braces and supports dispensed at your visit — no second stop."
+          [showButton]="false"
+          i18n-title="@@urgentCare.service.dme.title"
+          i18n-description="@@urgentCare.service.dme.desc"
+        ></app-service-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Reusable Bottom CTA Banner -->
+  <app-cta-banner
+    title="One visit. Everything you need."
+    i18n-title="@@ctaBanner.oneVisit.title"
+    description="Treatment, testing, and the equipment to recover — all under one roof."
+    i18n-description="@@ctaBanner.oneVisit.desc"
+    buttonText="SAVE MY SPOT"
+    i18n-buttonText="@@header.cta.saveMySpot"
+    buttonLink="/locations"
+  ></app-cta-banner>
+</div>

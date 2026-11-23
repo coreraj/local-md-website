@@ -1,0 +1,22 @@
+@import '../privacy-policy/privacy-policy.css';
+
+.attention-box {
+  background-color: #fff1f2;
+  border-left: 4px solid #f43f5e;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.attention-box p {
+  color: #9f1239 !important;
+  margin-bottom: 0.5rem;
+}
+
+.attention-box p:last-child {
+  margin-bottom: 0;
+}
+
+.attention-box strong {
+  color: #881337;
+}

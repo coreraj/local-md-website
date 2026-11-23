@@ -1,0 +1,1115 @@
+@if (showPopup) {
+  <dialog
+    class="permission-popup-overlay"
+    appModalDialog
+    (dismiss)="closePopup()"
+    aria-labelledby="submission-notice-title"
+    aria-describedby="submission-notice-message"
+  >
+    <div class="permission-popup-card">
+      <div class="popup-header">
+        <div class="popup-origin">
+          <app-icon name="location" size="18" color="#365873"></app-icon>
+          <span class="origin-host">local-md.com</span>
+        </div>
+        <button type="button" class="popup-close-btn" (click)="closePopup()" aria-label="Close">
+          &times;
+        </button>
+      </div>
+
+      <div class="popup-body">
+        <div
+          class="popup-icon-badge"
+          [class.success]="popupType === 'success'"
+          [class.error]="popupType === 'error'"
+        >
+          @if (popupType === 'success') {
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          } @else {
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          }
+        </div>
+        <div class="popup-content">
+          <p id="submission-notice-title" class="popup-title">
+            {{ popupType === 'success' ? 'Email Sent' : 'Notice' }}
+          </p>
+          <p id="submission-notice-message" class="popup-message">{{ popupMessage }}</p>
+        </div>
+      </div>
+
+      <div class="popup-actions">
+        <button type="button" class="popup-action-btn primary" (click)="closePopup()">OK</button>
+      </div>
+    </div>
+  </dialog>
+}
+
+<div class="occupational-health-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="Healthier teams. Less downtime."
+    i18n-headline="@@occupationalHealth.headline"
+    bodytext="From a single pre-employment physical to a full on-site program, Local MD keeps your workforce healthy, compliant, and on the job — across 13 locations in Illinois and Indiana."
+    i18n-bodytext="@@occupationalHealth.subhead"
+    [backgroundImage]="'assets/ocupational_health_hero.webp'"
+  >
+    <div class="hero-actions">
+      <a
+        routerLink="/occupational-health"
+        fragment="inquiry-form"
+        class="primary-btn hero-btn"
+        i18n="@@common.ctas.becomePartner"
+      >
+        BECOME A PARTNER
+      </a>
+    </div>
+  </app-hero>
+
+  <!-- 2. Why Employers Choose Local MD Split Section -->
+  <section class="why-employers-section">
+    <div class="container split-container">
+      <!-- Left Column: Information & Features -->
+      <div class="why-info-col">
+        <span class="section-subtitle" i18n="@@occupationalHealth.whyUs.subtitle"
+          >WHY EMPLOYERS CHOOSE LOCAL MD</span
+        >
+        <h2 class="section-title" i18n="@@occupationalHealth.whyUs.headline">
+          A faster, smarter partner
+        </h2>
+        <p class="section-desc" i18n="@@occupationalHealth.whyUs.desc">
+          With our own molecular lab, results that used to take a week can come back the next day —
+          meaning faster clearances, quicker return-to-work, and less lost productivity than a
+          typical occ-med provider.
+        </p>
+
+        <!-- Features list with vertically centered teal vector icons -->
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon-wrapper">
+              <app-icon name="fast" size="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="feature-text">
+              <h3 class="feature-title" i18n="@@occupationalHealth.whyUs.feature1.title">
+                Same-day appointments
+              </h3>
+              <p class="feature-desc" i18n="@@occupationalHealth.whyUs.feature1.desc">
+                Get employees seen quickly across 13 locations
+              </p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon-wrapper">
+              <app-icon name="labb" size="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="feature-text">
+              <h3 class="feature-title" i18n="@@occupationalHealth.whyUs.feature2.title">
+                Next-day lab results
+              </h3>
+              <p class="feature-desc" i18n="@@occupationalHealth.whyUs.feature2.desc">
+                Our in-house molecular lab speeds clearances
+              </p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon-wrapper">
+              <app-icon name="diagnostics" size="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="feature-text">
+              <h3 class="feature-title" i18n="@@occupationalHealth.whyUs.feature3.title">
+                Dedicated reporting
+              </h3>
+              <p class="feature-desc" i18n="@@occupationalHealth.whyUs.feature3.desc">
+                Custom result delivery for your organization
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Medical Authorization Form & Pay Your Bill Block (Rebuilt) -->
+        <div class="occ-health-actions-section">
+          <!-- Card 1: Medical Authorization Form -->
+          <div class="occ-action-card">
+            <h3 class="occ-card-title">Medical Authorization Form</h3>
+            <p class="occ-card-text">
+              Does your business have an established account with Local MD Urgent Care? Download or
+              fill out the Medical Authorization Form below!
+            </p>
+            <p class="occ-card-note">
+              If you do not have an account with us, email
+              <a href="mailto:OccHealth@Local-MD.com" class="note-email-link"
+                >OccHealth@Local-MD.com</a
+              >
+              before completing the form.
+            </p>
+            <div class="med-auth-actions">
+              <a
+                href="assets/Medical_Authorization_Form.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                type="application/pdf"
+                class="med-auth-primary-btn"
+              >
+                Medical Auth Form (PDF)
+              </a>
+              <button type="button" class="med-auth-secondary-btn" (click)="openMedAuthModal()">
+                Fill Out Online
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Pay Your Bill -->
+          <div class="occ-action-card">
+            <h3 class="occ-card-title">Pay Your Bill</h3>
+            <p class="occ-card-text">
+              Does your business have an established account with Local MD Urgent Care? Use the link
+              below to pay your bill.
+            </p>
+            <div class="occ-bill-actions">
+              <a
+                href="https://app.coworkhealth.io/auth/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="bill-action-btn"
+              >
+                Pay Your EPS Bill
+              </a>
+              <a
+                href="https://buy.stripe.com/6oEcOV8LAgwj7PW000"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="bill-action-btn"
+              >
+                Pay Your Workman's Comp Bill
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Inquiry Form Card -->
+      <div class="why-form-col" id="inquiry-form">
+        <div class="inquiry-card">
+          <h3 class="form-card-title" i18n="@@occupationalHealth.form.title">New client inquiry</h3>
+          <p class="form-card-subtitle" i18n="@@occupationalHealth.form.subtitle">
+            Tell us about your needs and our employer team will reach out.
+          </p>
+
+          <form
+            class="inquiry-form-element"
+            (submit)="onSubmit(); $event.preventDefault()"
+            novalidate
+          >
+            <div class="form-honeypot" aria-hidden="true">
+              <label for="inquiry-website" aria-hidden="true">Website</label>
+              <input
+                id="inquiry-website"
+                type="text"
+                [formField]="inquiryForm.website"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+              />
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="company" i18n="@@occupationalHealth.form.company"
+                >COMPANY</label
+              >
+              <input
+                id="company"
+                type="text"
+                class="form-input"
+                [class.invalid-field]="
+                  inquiryForm.company().touched() && inquiryForm.company().invalid()
+                "
+                placeholder="Your company"
+                i18n-placeholder="@@occupationalHealth.form.company.placeholder"
+                autocomplete="organization"
+                [formField]="inquiryForm.company"
+              />
+              @if (inquiryForm.company().touched() && inquiryForm.company().invalid()) {
+                <div class="field-error">
+                  {{ inquiryForm.company().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="contact-name" i18n="@@occupationalHealth.form.contact"
+                >CONTACT NAME</label
+              >
+              <input
+                id="contact-name"
+                type="text"
+                class="form-input"
+                [class.invalid-field]="
+                  inquiryForm.contactName().touched() && inquiryForm.contactName().invalid()
+                "
+                placeholder="Your full name"
+                i18n-placeholder="@@occupationalHealth.form.contact.placeholder"
+                autocomplete="name"
+                [formField]="inquiryForm.contactName"
+              />
+              @if (inquiryForm.contactName().touched() && inquiryForm.contactName().invalid()) {
+                <div class="field-error">
+                  {{ inquiryForm.contactName().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="email" i18n="@@occupationalHealth.form.email"
+                >EMAIL</label
+              >
+              <input
+                id="email"
+                type="email"
+                class="form-input"
+                [class.invalid-field]="
+                  inquiryForm.email().touched() && inquiryForm.email().invalid()
+                "
+                placeholder="your@email.com"
+                i18n-placeholder="@@occupationalHealth.form.email.placeholder"
+                autocomplete="email"
+                [formField]="inquiryForm.email"
+              />
+              @if (inquiryForm.email().touched() && inquiryForm.email().invalid()) {
+                <div class="field-error">
+                  {{ inquiryForm.email().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="phone" i18n="@@occupationalHealth.form.phone"
+                >PHONE</label
+              >
+              <input
+                id="phone"
+                type="tel"
+                class="form-input"
+                [class.invalid-field]="
+                  inquiryForm.phone().touched() && inquiryForm.phone().invalid()
+                "
+                placeholder="(555) 000-0000"
+                i18n-placeholder="@@occupationalHealth.form.phone.placeholder"
+                autocomplete="tel"
+                [formField]="inquiryForm.phone"
+              />
+              @if (inquiryForm.phone().touched() && inquiryForm.phone().invalid()) {
+                <div class="field-error">
+                  {{ inquiryForm.phone().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="message" i18n="@@occupationalHealth.form.message"
+                >WHAT DO YOU NEED?</label
+              >
+              <textarea
+                id="message"
+                class="form-textarea"
+                [class.invalid-field]="
+                  inquiryForm.message().touched() && inquiryForm.message().invalid()
+                "
+                placeholder="Tell us about your needs..."
+                i18n-placeholder="@@occupationalHealth.form.message.placeholder"
+                [formField]="inquiryForm.message"
+              ></textarea>
+              @if (inquiryForm.message().touched() && inquiryForm.message().invalid()) {
+                <div class="field-error">
+                  {{ inquiryForm.message().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="submit-btn"
+              [disabled]="isSubmitting"
+              i18n="@@occupationalHealth.form.submit"
+            >
+              {{ isSubmitting ? 'SENDING...' : 'SEND INQUIRY' }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Employer Services Grid -->
+  <section class="employer-services-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle" i18n="@@occupationalHealth.services.subtitle"
+          >EMPLOYER SERVICES</span
+        >
+        <h2 class="section-title" i18n="@@occupationalHealth.services.headline">
+          Built around how your business runs
+        </h2>
+        <p class="section-desc" i18n="@@occupationalHealth.body">
+          Your business runs on its people. Local MD's occupational health services keep them
+          working — fast pre-employment and DOT physicals, reliable drug and alcohol screening,
+          prompt injury care, and custom employer programs. And because we run our own
+          state-of-the-art laboratory in house, results come back faster than a typical occ-med
+          provider that ships everything to an outside lab — which means faster clearances and
+          quicker return-to-work.
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <!-- Card 1: Pre-Employment Physicals -->
+        <app-service-card
+          icon="exam"
+          title="Pre-Employment Physicals"
+          description="Fast, thorough physicals so new hires start on day one."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.physical.title"
+          i18n-description="@@occupationalHealth.card.physical.desc"
+        ></app-service-card>
+
+        <!-- Card 2: Drug & Alcohol Screening -->
+        <app-service-card
+          icon="labb"
+          title="Drug & Alcohol Screening"
+          description="DOT and non-DOT screening with reliable, prompt reporting."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.drug.title"
+          i18n-description="@@occupationalHealth.card.drug.desc"
+        ></app-service-card>
+
+        <!-- Card 3: Workers' Comp & Injury Care -->
+        <app-service-card
+          icon="injury"
+          title="Workers' Comp & Injury Care"
+          description="Rapid injury evaluation and treatment to support a safe return to work."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.injury.title"
+          i18n-description="@@occupationalHealth.card.injury.desc"
+        ></app-service-card>
+
+        <!-- Card 4: Employer Panels & Clearances -->
+        <app-service-card
+          icon="results"
+          title="Employer Panels & Clearances"
+          description="Custom screening panels, respirator clearances, and fitness-for-duty exams."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.panel.title"
+          i18n-description="@@occupationalHealth.card.panel.desc"
+        ></app-service-card>
+
+        <!-- Card 5: Vaccinations & Titers -->
+        <app-service-card
+          icon="vaccination"
+          title="Vaccinations & Titers"
+          description="Flu clinics, immunizations, and titer testing for your team."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.vaccination.title"
+          i18n-description="@@occupationalHealth.card.vaccination.desc"
+        ></app-service-card>
+
+        <!-- Card 6: On-Site Programs -->
+        <app-service-card
+          icon="onsite"
+          title="On-Site Programs"
+          description="Bring services directly to your worksite for large or recurring needs."
+          [showButton]="false"
+          i18n-title="@@occupationalHealth.card.onsite.title"
+          i18n-description="@@occupationalHealth.card.onsite.desc"
+        ></app-service-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Medical Authorization Native Fillable Web Form Modal -->
+  @if (showMedAuthModal) {
+    <dialog
+      class="med-auth-modal-overlay"
+      appModalDialog
+      (dismiss)="closeMedAuthModal()"
+      aria-labelledby="med-auth-title"
+    >
+      <div class="med-auth-modal-card">
+        <div class="med-auth-header">
+          <div>
+            <h2 id="med-auth-title" class="med-auth-modal-title">Medical Authorization Form</h2>
+            <p class="med-auth-modal-sub">
+              Submits directly to <strong>Local MD Occupational Health</strong> (No download or
+              print required)
+            </p>
+          </div>
+          <button
+            type="button"
+            class="med-auth-close-btn"
+            (click)="closeMedAuthModal()"
+            aria-label="Close form"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form
+          class="med-auth-form"
+          (submit)="onSubmitMedAuth(); $event.preventDefault()"
+          novalidate
+        >
+          <div class="form-honeypot" aria-hidden="true">
+            <label for="med-auth-website" aria-hidden="true">Website</label>
+            <input
+              id="med-auth-website"
+              type="text"
+              [formField]="medicalAuthorizationForm.website"
+              tabindex="-1"
+              autocomplete="off"
+              aria-hidden="true"
+            />
+          </div>
+          <!-- Section 1: Patient & Employer Information -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">1. Patient & Employer Information</h3>
+            <div class="med-form-grid">
+              <div class="input-group">
+                <label class="input-label" for="med-emp-name">PATIENT'S NAME *</label>
+                <input
+                  id="med-emp-name"
+                  type="text"
+                  class="form-input"
+                  [class.invalid-field]="
+                    medicalAuthorizationForm.employeeName().touched() &&
+                    medicalAuthorizationForm.employeeName().invalid()
+                  "
+                  [formField]="medicalAuthorizationForm.employeeName"
+                  placeholder="Patient's Full Name"
+                  data-modal-initial-focus
+                />
+                @if (
+                  medicalAuthorizationForm.employeeName().touched() &&
+                  medicalAuthorizationForm.employeeName().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.employeeName().errors()[0]?.message }}
+                  </div>
+                }
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="med-sign-date">DATE *</label>
+                <input
+                  id="med-sign-date"
+                  type="date"
+                  class="form-input"
+                  [class.invalid-field]="
+                    medicalAuthorizationForm.signatureDate().touched() &&
+                    medicalAuthorizationForm.signatureDate().invalid()
+                  "
+                  [formField]="medicalAuthorizationForm.signatureDate"
+                />
+                @if (
+                  medicalAuthorizationForm.signatureDate().touched() &&
+                  medicalAuthorizationForm.signatureDate().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.signatureDate().errors()[0]?.message }}
+                  </div>
+                }
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="med-company">EMPLOYER NAME *</label>
+                <input
+                  id="med-company"
+                  type="text"
+                  class="form-input"
+                  [class.invalid-field]="
+                    medicalAuthorizationForm.company().touched() &&
+                    medicalAuthorizationForm.company().invalid()
+                  "
+                  [formField]="medicalAuthorizationForm.company"
+                  autocomplete="organization"
+                  placeholder="Employer Name"
+                />
+                @if (
+                  medicalAuthorizationForm.company().touched() &&
+                  medicalAuthorizationForm.company().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.company().errors()[0]?.message }}
+                  </div>
+                }
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="med-account">ACCOUNT # (OPTIONAL)</label>
+                <input
+                  id="med-account"
+                  type="text"
+                  class="form-input"
+                  [formField]="medicalAuthorizationForm.accountNumber"
+                  placeholder="e.g. ACC-12345"
+                />
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="med-contact-phone">PHONE *</label>
+                <input
+                  id="med-contact-phone"
+                  type="tel"
+                  class="form-input"
+                  [class.invalid-field]="
+                    medicalAuthorizationForm.contactPhone().touched() &&
+                    medicalAuthorizationForm.contactPhone().invalid()
+                  "
+                  [formField]="medicalAuthorizationForm.contactPhone"
+                  autocomplete="tel"
+                  placeholder="(555) 000-0000"
+                />
+                @if (
+                  medicalAuthorizationForm.contactPhone().touched() &&
+                  medicalAuthorizationForm.contactPhone().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.contactPhone().errors()[0]?.message }}
+                  </div>
+                }
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="med-contact-name"
+                  >AUTHORIZED BY (PRINT NAME) *</label
+                >
+                <input
+                  id="med-contact-name"
+                  type="text"
+                  class="form-input"
+                  [class.invalid-field]="
+                    medicalAuthorizationForm.contactName().touched() &&
+                    medicalAuthorizationForm.contactName().invalid()
+                  "
+                  [formField]="medicalAuthorizationForm.contactName"
+                  autocomplete="name"
+                  placeholder="Authorized Name"
+                />
+                @if (
+                  medicalAuthorizationForm.contactName().touched() &&
+                  medicalAuthorizationForm.contactName().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.contactName().errors()[0]?.message }}
+                  </div>
+                }
+              </div>
+
+              <div class="input-group full-width">
+                <label class="input-label" for="med-expires">AUTHORIZATION EXPIRES</label>
+                <input
+                  id="med-expires"
+                  type="text"
+                  class="form-input"
+                  [formField]="medicalAuthorizationForm.authorizationExpires"
+                  placeholder="e.g. MM/DD/YYYY or 30 days"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Work-Related Injury -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">2. Work-Related Injury</h3>
+            <div class="checkbox-grid">
+              <label class="checkbox-label">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.workInjuryTreatment" />
+                Work Injury Treatment
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [formField]="medicalAuthorizationForm.consultCompensability"
+                />
+                Consult to Determine Compensability (Evaluation for cause of injury)
+              </label>
+            </div>
+            <div class="input-group full-width" style="margin-top: 12px">
+              <label class="input-label" for="med-body-part">BODY PART:</label>
+              <input
+                id="med-body-part"
+                type="text"
+                class="form-input"
+                [formField]="medicalAuthorizationForm.bodyPart"
+                placeholder="Specific body part(s)..."
+              />
+            </div>
+          </div>
+
+          <!-- Section 3: Evaluations / Examinations -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">3. Evaluations / Examinations</h3>
+            <div class="checkbox-grid">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [formField]="medicalAuthorizationForm.physicalPreEmployment"
+                />
+                Pre-Placement Exam / Post-Offer Exam
+              </label>
+            </div>
+            <div class="input-group full-width" style="margin-top: 8px">
+              <label class="input-label" for="med-emp-title">JOB TITLE (OPTIONAL)</label>
+              <input
+                id="med-emp-title"
+                type="text"
+                class="form-input"
+                [formField]="medicalAuthorizationForm.employeeTitle"
+                placeholder="e.g. Driver / Warehouse Tech"
+              />
+            </div>
+
+            <div style="margin-top: 12px">
+              <label class="checkbox-label font-bold">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.liftTest" />
+                Lift Test
+              </label>
+              @if (medicalAuthorizationModel().liftTest) {
+                <div class="input-group" style="margin-top: 6px; max-width: 250px">
+                  <label class="input-label" for="med-lift-weight">WEIGHT:</label>
+                  <input
+                    id="med-lift-weight"
+                    type="text"
+                    class="form-input"
+                    [formField]="medicalAuthorizationForm.liftTestWeight"
+                    placeholder="e.g. 50 lbs"
+                  />
+                </div>
+              }
+            </div>
+
+            <div style="margin-top: 16px">
+              <label class="checkbox-label font-bold">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.schoolBusDriver" />
+                School Bus Driver
+              </label>
+              @if (medicalAuthorizationModel().schoolBusDriver) {
+                <div class="radio-subgrid" style="margin-left: 24px; margin-top: 6px">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      value="Annual"
+                      [formField]="medicalAuthorizationForm.schoolBusType"
+                    />
+                    Annual
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      value="New Hire"
+                      [formField]="medicalAuthorizationForm.schoolBusType"
+                    />
+                    New Hire
+                  </label>
+                </div>
+                @if (
+                  medicalAuthorizationForm.schoolBusType().touched() &&
+                  medicalAuthorizationForm.schoolBusType().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.schoolBusType().errors()[0]?.message }}
+                  </div>
+                }
+              }
+            </div>
+
+            <div style="margin-top: 16px">
+              <label class="checkbox-label font-bold">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.dotExam" />
+                DOT Exam
+              </label>
+              @if (medicalAuthorizationModel().dotExam) {
+                <div class="radio-subgrid" style="margin-left: 24px; margin-top: 6px">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      value="New Certification"
+                      [formField]="medicalAuthorizationForm.dotExamType"
+                    />
+                    New Certification
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      value="Recertification"
+                      [formField]="medicalAuthorizationForm.dotExamType"
+                    />
+                    Recertification
+                  </label>
+                </div>
+                @if (
+                  medicalAuthorizationForm.dotExamType().touched() &&
+                  medicalAuthorizationForm.dotExamType().invalid()
+                ) {
+                  <div class="field-error">
+                    {{ medicalAuthorizationForm.dotExamType().errors()[0]?.message }}
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Section 4: Drug & Alcohol Testing -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">4. Drug & Alcohol Testing</h3>
+
+            <div class="testing-split-grid">
+              <!-- NON-DOT -->
+              <div class="testing-col">
+                <h4 class="med-subheading text-teal">NON-DOT</h4>
+                <div class="testing-subcol">
+                  <strong>Drug</strong>
+                  <div class="checkbox-stack">
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugPreEmployment"
+                      />
+                      Pre-Employment</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugRandom"
+                      />
+                      Random</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugFollowUp"
+                      />
+                      Follow-Up</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugReasonableSuspicion"
+                      />
+                      Reasonable Suspicion</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugReturnToDuty"
+                      />
+                      Return to Duty</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugPostAccident"
+                      />
+                      Post-Accident</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugHairFollicle"
+                      />
+                      Hair Follicle Drug</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotDrugRapid"
+                      />
+                      Rapid</label
+                    >
+                    <div class="input-group" style="margin-top: 4px">
+                      <input
+                        type="text"
+                        class="form-input compact"
+                        [formField]="medicalAuthorizationForm.nonDotDrugOther"
+                        placeholder="Other:"
+                      />
+                    </div>
+                  </div>
+
+                  <strong style="margin-top: 16px; display: block">Alcohol</strong>
+                  <div class="checkbox-stack">
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholPreEmployment"
+                      />
+                      Pre-Employment</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholRandom"
+                      />
+                      Random</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholFollowUp"
+                      />
+                      Follow-Up</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholReasonableSuspicion"
+                      />
+                      Reasonable Suspicion</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholReturnToDuty"
+                      />
+                      Return to Duty</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholPostAccident"
+                      />
+                      Post-Accident</label
+                    >
+                    <div class="input-group" style="margin-top: 4px">
+                      <input
+                        type="text"
+                        class="form-input compact"
+                        [formField]="medicalAuthorizationForm.nonDotAlcoholOther"
+                        placeholder="Other:"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DOT - DEPARTMENT OF TRANSPORTATION -->
+              <div class="testing-col">
+                <h4 class="med-subheading text-crimson">DOT-DEPARTMENT OF TRANSPORTATION</h4>
+                <div class="testing-subcol">
+                  <strong>Drug</strong>
+                  <div class="checkbox-stack">
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugPreEmployment"
+                      />
+                      Pre-Employment</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugRandom"
+                      />
+                      Random</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugFollowUp"
+                      />
+                      Follow-Up</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugReasonableSuspicion"
+                      />
+                      Reasonable Suspicion</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugReturnToDuty"
+                      />
+                      Return to Duty</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotDrugPostAccident"
+                      />
+                      Post-Accident</label
+                    >
+                    <div class="input-group" style="margin-top: 4px">
+                      <input
+                        type="text"
+                        class="form-input compact"
+                        [formField]="medicalAuthorizationForm.dotDrugOther"
+                        placeholder="Other:"
+                      />
+                    </div>
+                  </div>
+
+                  <strong style="margin-top: 16px; display: block">Alcohol</strong>
+                  <div class="checkbox-stack">
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholPreEmployment"
+                      />
+                      Pre-Employment</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholRandom"
+                      />
+                      Random</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholFollowUp"
+                      />
+                      Follow-Up</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholReasonableSuspicion"
+                      />
+                      Reasonable Suspicion</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholReturnToDuty"
+                      />
+                      Return to Duty</label
+                    >
+                    <label class="checkbox-label"
+                      ><input
+                        type="checkbox"
+                        [formField]="medicalAuthorizationForm.dotAlcoholPostAccident"
+                      />
+                      Post-Accident</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: Other Services -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">5. Other Services</h3>
+            <div class="checkbox-grid">
+              <label class="checkbox-label">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.fitTesting" />
+                Fit Testing
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.quantiferonGold" />
+                Quantiferon Gold
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.tbSkinTest" />
+                Tuberculosis (TB) Skin Test
+              </label>
+            </div>
+            <div class="input-group full-width" style="margin-top: 12px">
+              <label class="input-label" for="med-other-services">OTHER:</label>
+              <input
+                id="med-other-services"
+                type="text"
+                class="form-input"
+                [formField]="medicalAuthorizationForm.otherServicesOther"
+                placeholder="Other services..."
+              />
+            </div>
+          </div>
+
+          <!-- Section 6: Contact Email & Submission Confirmation -->
+          <div class="med-form-section">
+            <h3 class="med-section-heading">6. Contact & Submission Confirmation</h3>
+            <div class="input-group full-width">
+              <label class="input-label" for="med-contact-email"
+                >CONTACT EMAIL (FOR CONFIRMATION & RECEIPT) *</label
+              >
+              <input
+                id="med-contact-email"
+                type="email"
+                class="form-input"
+                [class.invalid-field]="
+                  medicalAuthorizationForm.contactEmail().touched() &&
+                  medicalAuthorizationForm.contactEmail().invalid()
+                "
+                [formField]="medicalAuthorizationForm.contactEmail"
+                autocomplete="email"
+                placeholder="rep@company.com"
+              />
+              @if (
+                medicalAuthorizationForm.contactEmail().touched() &&
+                medicalAuthorizationForm.contactEmail().invalid()
+              ) {
+                <div class="field-error">
+                  {{ medicalAuthorizationForm.contactEmail().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+
+            <div class="consent-group">
+              <label class="checkbox-label consent-label">
+                <input type="checkbox" [formField]="medicalAuthorizationForm.consent" />
+                I certify that I am an authorized representative of the employer named above and
+                hereby authorize Local MD Urgent Care to perform the selected services.
+              </label>
+              @if (
+                medicalAuthorizationForm.consent().touched() &&
+                medicalAuthorizationForm.consent().invalid()
+              ) {
+                <div class="field-error">
+                  {{ medicalAuthorizationForm.consent().errors()[0]?.message }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="med-form-actions">
+            <button type="button" class="med-cancel-btn" (click)="closeMedAuthModal()">
+              Cancel
+            </button>
+            <button type="submit" class="med-submit-btn" [disabled]="isSubmittingMedAuth">
+              @if (isSubmittingMedAuth) {
+                <span>SUBMITTING...</span>
+              } @else {
+                <span>SUBMIT AUTHORIZATION FORM</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+  }
+</div>

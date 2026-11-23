@@ -1,0 +1,50 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+/.pnpm-store
+npm-debug.log
+yarn-error.log
+
+# Private runtime configuration (the documented example is safe to commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/
+.history/*
+
+# Miscellaneous
+/.angular/cache
+/.runtime
+/node-v*-win-x64.zip
+/dev-server*.log
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+
+# System files
+.DS_Store
+Thumbs.db

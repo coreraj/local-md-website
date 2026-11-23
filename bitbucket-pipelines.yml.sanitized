@@ -1,0 +1,1166 @@
+# Local-MD.com pipeline
+# ============================================================================
+# This is an INACTIVE design example. Bitbucket does not discover this filename.
+# No claim of NSA certification, HIPAA compliance, or SLSA conformance is made.
+#
+# All pipeline-side Bash, Python, HTTP checks, browser checks, packaging and API
+# clients are defined here. Temporary scripts are generated from these inline
+# blocks inside disposable workers; there are no tools/ci/* script dependencies.
+# Existing application tests remain in the application repository.
+#
+# Replace the three .invalid CI image references AND their zero SHA-256 digests
+# before activation. Images must be independently reviewed and signed. An
+# organization-controlled pipeline policy must enforce their actual digests.
+# Copy/rename this file to bitbucket-pipelines.yml only after provisioning and
+# reviewing the services, images, runners, trust roots and policies below.
+#
+# CURRENT APPLICATION CONTRACT
+# - Angular SSR + Express, Node >=24, pnpm 11.5.3, no database.
+# - pnpm run build:prod; the removed build:prod:report is deliberately not used.
+# - Deploy dist/local-md-website/browser AND server, the PDF template, and locked
+#   production Node dependencies. A browser-only deployment loses the APIs.
+# - There is no /health endpoint. HTTP checks use /home and uncached API errors.
+# - Allowed hosts currently include local-md.com and www.local-md.com. Add the
+#   reviewed staging hostname to angular.json BEFORE the one production build,
+#   or configure isolated staging routing with the production host. Do not
+#   rewrite public build configuration during promotion.
+# - The current build fetches Google Fonts CSS for inlining. Allow only reviewed
+#   font endpoints through the build egress policy, or vendor the fonts first.
+#   This example DOES NOT claim a hermetic build of the current source.
+# - SMTP secrets belong to runtime identities, never repository/workspace
+#   variables. Staging mail uses synthetic data and restricted test mailboxes.
+# - Medical confirmations can fail after the primary message was accepted.
+#   Acceptance must inspect every expected mailbox, not just HTTP success.
+#
+# TRUST BOUNDARIES: CONFIGURED OUTSIDE THIS YAML
+# 1. Protected main; independent review of source, pipeline and policy changes;
+#    enforced merge checks; independent, expiring production approvals.
+# 2. Disposable Linux workers in SEPARATE build / verifier / control pools.
+#    self.hosted labels do not prove isolation or disposability. Provisioning
+#    must enforce it, patch hosts, prohibit privileged host Docker sockets and
+#    prevent cross-job filesystem/network access. No shared writable caches.
+#    Job users are non-root; toolchain/policy mounts are read-only. The isolated
+#    browser image/worker must support Chromium's user-namespace sandbox; do not
+#    add --no-sandbox to make an incorrectly provisioned worker pass.
+#    Reviewed source/configuration and Git metadata must remain immutable during
+#    builds; only declared output/install/scratch directories are writable.
+#    Remove legacy SSH_PRIVATE_KEY, server passwords and Cloudflare tokens from
+#    repository/workspace variables. oidc:false does not hide ordinary variables.
+# 3. Workspace policy enforces this expanded pipeline, image digests, worker
+#    pools, allowed variables, mandatory checks and protected deployment names.
+#    A repository-maintainer-editable YAML cannot enforce its own integrity.
+# 4. A platform attestor outside user-defined steps authenticates the actual
+#    source, executed pipeline definition, worker/image identity and hashes of
+#    candidate/evidence artifacts. Uploaded JSON reports are only assertions.
+#    Without that attestor and isolated verifier, the signer MUST refuse release.
+# 5. Release service: immutable digest-addressed blobs, platform provenance,
+#    independent verification, protected RSA/SHA-256 signing keys (KMS/HSM),
+#    fresh vulnerability checks, policy exceptions with ownership and expiry,
+#    artifact revocation and independent append-only audit retention.
+# 6. Deployment controller: short-lived OIDC authorization bound to repository,
+#    exact pipeline/step and deployment environment; independently verify source
+#    eligibility and approvals through authoritative Bitbucket/approval APIs.
+#    A caller's branch field or locally decoded JWT is NEVER authorization.
+# 7. Controller-hosted deployment policy covers configuration drift, SMTP TLS,
+#    proxy trust, secrets, runtime/OS patching and old hashed-asset retention.
+#    This file orchestrates those services; it does not implement their servers.
+#
+# APPROVED IMAGES
+# - build: Bash, Node, pnpm, jq, GNU tar/coreutils/gzip, Gitleaks, Semgrep with
+#   trusted rules, Python, and /opt/ci/policy.json. NO release credentials.
+# - verifier: Bash, jq, Python, Syft, Grype, Gitleaks, local rootless Podman.
+#   Podman must support network=none and network=container:<id>. It runs only on
+#   a dedicated one-job worker. No application container gets its engine socket.
+#   Runtime and browser-test images are preloaded and digest-pinned by policy;
+#   tests use --pull=never and have no network beyond their shared loopback.
+# - control: Bash, Node, jq, curl, OpenSSL, trusted CA and PUBLIC signing keys.
+#   It never executes repository scripts, dependency lifecycle scripts or the
+#   candidate application. Source cloning is disabled in every control step.
+# - Test containers are read-only, run as UID/GID 10001, with no capabilities,
+#   no-new-privileges, CPU/memory/PID limits, and only explicit read-only mounts.
+#   Security depends on runtime/kernel isolation as well as these flags.
+#
+# TRUSTED /opt/ci/policy.json (mounted from the approved image, not this repo)
+# {
+#   "repoUUID": "{REPLACE_WITH_REPOSITORY_UUID}",
+#   "nodeVersion": "v24.15.0",
+#   "pnpmVersion": "11.5.3",
+#   "releasePolicySha256": "<64 lowercase hex characters>",
+#   "verificationSuiteSha256": "<64 lowercase hex characters>",
+#   "releaseApi": "https://releases.example.invalid",
+#   "controlApi": "https://deployments.example.invalid",
+#   "npmRegistry": "https://packages.example.invalid",
+#   "runtimeImage": "registry.example.invalid/node-runtime@sha256:<digest>",
+#   "browserImage": "registry.example.invalid/browser-tests@sha256:<digest>",
+#   "deployment": {
+#     "staging": {
+#       "origin": "https://staging.example.invalid",
+#       "configurationSha256": "<64 lowercase hex characters>"
+#     },
+#     "production": {
+#       "origin": "https://www.local-md.com",
+#       "configurationSha256": "<64 lowercase hex characters>"
+#     }
+#   }
+# }
+# policy.json is validated below. Placeholder hosts/digests fail closed.
+# Both control and verifier images contain the same approved policy revision.
+# Public trust roots:
+#   /opt/ci/trust/service-ca.pem       TLS CA bundle for service APIs
+#   /opt/ci/trust/release-public.pem   RSA release/eligibility verification key
+#   /opt/ci/trust/control-public.pem   RSA deployment/acceptance verification key
+# Scanner rules:
+#   /opt/ci/policy/gitleaks.toml       independently owned rules
+#   /opt/ci/policy/empty.gitleaksignore empty, immutable ignore file
+#   /opt/ci/policy/semgrep/            independently owned static-analysis rules
+#   /opt/ci/policy/syft.yaml           explicit cataloging, no package exclusions
+#   /opt/ci/policy/grype.yaml          approved DB mirror, no vulnerability ignores
+#
+# PROPOSED SERVICE API CONTRACT (these are NOT existing Bitbucket endpoints)
+# All requests use HTTPS, a bounded response, no redirects, no automatic retry
+# of writes, and an OIDC bearer token. Server-side idempotency keys resolve an
+# unknown write outcome; the client never assumes a failed POST did not execute.
+#
+# Release API:
+# PUT  /v1/candidates/sha256/<digest>/application   raw application.tar.gz
+# PUT  /v1/evidence/sha256/<digest>                raw evidence.tar.gz
+# POST /v1/releases                             candidate request -> operation
+# GET  /v1/releases/sha256/<digest>/manifest.json exact signed bytes
+# GET  /v1/releases/sha256/<digest>/manifest.sig  base64 RSA/SHA-256 signature
+# POST /v1/eligibility                          fresh policy/revocation check
+# POST /v1/reassessments                        retained release rescan request
+#
+# Control API:
+# POST /v1/deployments                          deploy request -> operation
+# POST /v1/acceptances                          independent staging suite
+# POST /v1/rollbacks                            prior production release only
+# POST /v1/cache-revalidations                  targeted environment cache work
+#
+# Both services:
+# GET /v1/operations/<id>                       {"status":"queued|running|..."}
+# GET /v1/operations/<id>/result.json            exact signed result bytes
+# GET /v1/operations/<id>/result.sig             base64 signature
+# GET /v1/requests/<requestSha256>               authorized idempotency lookup
+# POST returns HTTP 202 {"operationId":"[A-Za-z0-9_-]{1,80}"}.
+# PUT returns HTTP 200 or 201; content must be immutable and digest-checked.
+# Signed result schema:
+# {
+#   "schema":"local-md.operation/v1", "operationId":"...",
+#   "requestSha256":"<hash of exact submitted JSON bytes>",
+#   "repoUUID":"...", "pipelineUUID":"...", "status":"succeeded",
+#   "kind":"release|eligibility|deploy|acceptance|rollback|cache|reassess",
+#   "digest":"<application sha256>", "environment":"staging|production|null",
+#   "configurationSha256":"<digest>|null", "issuedAt":"ISO8601",
+#   "expiresAt":"ISO8601",
+#   "deploymentId":"...", "acceptanceId":"...",
+#   "acceptanceSuiteSha256":"<digest>", "cacheChanged":false
+# }
+# Signed manifest schema:
+# {
+#   "schema":"local-md.release/v1", "digest":"<application sha256>",
+#   "evidenceSha256":"<evidence archive sha256>", "repoUUID":"...",
+#   "sourceCommit":"<40 lowercase hex>", "pipelineUUID":"...",
+#   "nodeVersion":"v24.15.0", "buildPolicySha256":"<digest>",
+#   "verificationSuiteSha256":"<digest>", "createdAt":"ISO8601",
+#   "provenanceVerified":true, "independentVerificationPassed":true
+# }
+# These booleans are signed SERVICE conclusions, not accepted client assertions.
+# The service separately retains platform provenance, SBOM, test attestations,
+# scanner/database identities, policy decisions, approval and audit evidence.
+# Operation results expire; manifests persist. The fresh eligibility/controller
+# checks handle revocation, obsolete keys/policies and vulnerability changes.
+# After an unknown outcome, use the logged request hash/operation ID to reconcile
+# with the service. An expired result must not be treated as fresh authorization.
+# Renewed attestations, if supported, must be atomically paired with their detached
+# signatures and retained as new audit events. Never silently overwrite history.
+#
+# CONTROLLER IMPLEMENTATION REQUIREMENTS
+# An rsync/PM2 backend can preserve the old hosting model:
+# - Verify the signed digest BEFORE extraction/start; validate archive members.
+# - Serialize deployment per environment; reject obsolete concurrent requests.
+# - Sync to a new /srv/local-md/releases/<digest>/ directory, never --delete
+#   the live directory. Use pinned SSH host keys and a restricted deploy account.
+# - Use an approved absolute Node binary; no /root/.nvm or nvm use default.
+# - Start candidate on an isolated port with server-side secret references.
+# - Check candidate; switch the reverse proxy transactionally; drain old process.
+# - Keep prior complete releases AND serve their hashed lazy assets through an
+#   asset-retention layer. A current symlink alone does not retain asset access.
+# - Roll back traffic on health failure; record failure even if recovery passes.
+# - Require same-digest staging acceptance and independent production approval.
+# - On lost client connection, continue or reconcile the recorded operation.
+#   Do not trigger a blind rollback from a shell EXIT trap.
+# - Keep Cloudflare credentials inside the controller, scoped separately by
+#   environment. Revalidate HTML/unhashed content only when cache policy needs
+#   it; never reuse development tokens for production or purge everything.
+# - Staging acceptance uses verified synthetic fixtures, both forms, expected
+#   staff/confirmation mailboxes and PDF contents, proxy/header/cache checks.
+#   It must not send production patient submissions or store PHI in evidence.
+# - Reject revoked/vulnerable rollback targets; emergency exceptions require
+#   separately authorized, audited, expiring policy. There is no bypass switch.
+#
+# REFERENCES
+# https://support.atlassian.com/bitbucket-cloud/docs/step-options/
+# https://support.atlassian.com/bitbucket-cloud/docs/dynamic-pipelines/
+# https://support.atlassian.com/bitbucket-cloud/docs/integrate-pipelines-with-resource-servers-using-oidc/
+# https://slsa.dev/spec/v1.2/build-requirements
+# https://media.defense.gov/2023/Jun/28/2003249466/-1/-1/0/CSI_DEFENDING_CI_ENVIRONMENTS.PDF
+#
+# Bitbucket artifacts are temporary (documented 14-day retention), not durable
+# release storage. Old pipelines may become unpromotable after artifact expiry.
+# The custom rollback/rescan flows fetch signed records from durable services.
+# Ordinary manual triggers are not independent approval. Deployment restrictions
+# and workspace policy must protect every custom pipeline too.
+
+image:
+  name: &build-image "ci.example.invalid/local-md/build@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+options:
+  max-time: 30
+
+clone:
+  depth: full
+
+definitions:
+  steps:
+    - step: &build
+        name: Source gates, production build and deterministic packaging
+        runs-on:
+          - self.hosted
+          - linux
+          - local-md-build
+        # No OIDC, production credentials, shared cache or Docker service.
+        script:
+          - &inline-library |
+              set +x
+              set -eu
+              umask 077
+              test ! -e .ci-inline
+              mkdir .ci-inline
+              cat > .ci-inline/common.bash <<'COMMON_BASH'
+              set +x
+              set -Eeuo pipefail
+              export PATH=/usr/local/bin:/usr/bin:/bin
+              export LC_ALL=C TZ=UTC
+              unset BASH_ENV ENV NODE_OPTIONS
+              umask 077
+              SCRATCH="$(mktemp -d /tmp/local-md-ci.XXXXXXXX)"
+              CONTAINERS=()
+              cleanup() {
+                local item
+                for item in "${CONTAINERS[@]}"; do
+                  podman rm --force "$item" >/dev/null 2>&1 || true
+                done
+                case "$SCRATCH" in
+                  /tmp/local-md-ci.*) rm -rf -- "$SCRATCH" ;;
+                esac
+              }
+              trap 'exit_code=$?; cleanup; exit "$exit_code"' EXIT
+              trap 'printf "Pipeline gate failed at line %s; inspect restricted evidence.\n" "$LINENO" >&2' ERR
+              die() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
+              need() { command -v "$1" >/dev/null || die "Required approved tool is unavailable: $1"; }
+              hex64() { [[ "$1" =~ ^[a-f0-9]{64}$ ]] || die 'Expected a lowercase SHA-256 digest'; }
+              commit40() { [[ "$1" =~ ^[a-f0-9]{40}$ ]] || die 'Expected a Git commit identifier'; }
+              object_id() { [[ "$1" =~ ^[A-Za-z0-9_-]{1,80}$ ]] || die 'Invalid service operation/object identifier'; }
+              hash_file() { sha256sum -- "$1" | cut -d ' ' -f 1; }
+              origin() {
+                # Only a root HTTPS origin; never credentials, a path, query or fragment.
+                [[ "$1" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]] ||
+                  die 'Trusted configuration contains an invalid HTTPS origin'
+                [[ "$1" != *example.invalid* && "$1" != *localhost* ]] ||
+                  die 'Replace example service origins before activation'
+              }
+              pinned_image() {
+                [[ "$1" =~ ^[A-Za-z0-9./:_-]+@sha256:[a-f0-9]{64}$ ]] ||
+                  die 'A digest-pinned test image is required'
+                [[ "$1" != *example.invalid* && "$1" != *@sha256:0000000000000000000000000000000000000000000000000000000000000000 ]] ||
+                  die 'Replace example test image digests before activation'
+              }
+              need jq
+              need sha256sum
+              test -s /opt/ci/policy.json || die 'Approved image policy is missing'
+              jq -e '
+                .repoUUID | type == "string"
+              ' /opt/ci/policy.json >/dev/null
+              REPO_UUID="$(jq -er .repoUUID /opt/ci/policy.json)"
+              [[ "${BITBUCKET_REPO_UUID:?}" == "$REPO_UUID" ]] ||
+                die 'Repository is not authorized by the image policy'
+              NODE_VERSION="$(jq -er .nodeVersion /opt/ci/policy.json)"
+              PNPM_VERSION="$(jq -er .pnpmVersion /opt/ci/policy.json)"
+              POLICY_SHA="$(jq -er .releasePolicySha256 /opt/ci/policy.json)"
+              SUITE_SHA="$(jq -er .verificationSuiteSha256 /opt/ci/policy.json)"
+              RELEASE_API="$(jq -er .releaseApi /opt/ci/policy.json)"
+              CONTROL_API="$(jq -er .controlApi /opt/ci/policy.json)"
+              NPM_REGISTRY="$(jq -er .npmRegistry /opt/ci/policy.json)"
+              hex64 "$POLICY_SHA"
+              hex64 "$SUITE_SHA"
+              origin "$RELEASE_API"
+              origin "$CONTROL_API"
+              origin "$NPM_REGISTRY"
+              RELEASE_KEY=/opt/ci/trust/release-public.pem
+              CONTROL_KEY=/opt/ci/trust/control-public.pem
+
+              authenticate() {
+                # Validation here only prevents config-file injection. The SERVICE
+                # validates JWT signature, issuer, audience, expiry and authorization.
+                need curl
+                need openssl
+                test -s /opt/ci/trust/service-ca.pem || die 'Trusted service CA is missing'
+                [[ "${BITBUCKET_STEP_OIDC_TOKEN:-}" =~ ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$ ]] ||
+                  die 'A Bitbucket step OIDC token is required'
+                printf 'header = "Authorization: Bearer %s"\n' \
+                  "$BITBUCKET_STEP_OIDC_TOKEN" > "$SCRATCH/auth.curl"
+                chmod 600 "$SCRATCH/auth.curl"
+              }
+              api() {
+                local method="$1" base="$2" path="$3" input="$4" output="$5" status
+                [[ "$base" == "$RELEASE_API" || "$base" == "$CONTROL_API" ]] ||
+                  die 'API origin is outside trusted policy'
+                [[ "$path" =~ ^/v1/[A-Za-z0-9_./-]+$ && "$path" != *..* ]] ||
+                  die 'Invalid API path'
+                local -a args=(
+                  --disable --silent --show-error --fail
+                  --config "$SCRATCH/auth.curl"
+                  --cacert /opt/ci/trust/service-ca.pem
+                  --proto '=https' --tlsv1.2
+                  --connect-timeout 10 --max-time 120
+                  --max-filesize 4194304
+                  --request "$method" --output "$output"
+                  --write-out '%{http_code}'
+                )
+                if [[ "$method" == POST ]]; then
+                  args+=(--header 'Content-Type: application/json'
+                    --header "Idempotency-Key: $(hash_file "$input")"
+                    --data-binary "@$input")
+                elif [[ "$method" == PUT ]]; then
+                  args+=(--header 'Content-Type: application/octet-stream'
+                    --header "Idempotency-Key: $(hash_file "$input")"
+                    --data-binary "@$input")
+                elif [[ "$method" != GET ]]; then
+                  die 'Unsupported API method'
+                fi
+                # No --location, automatic write retry, shell tracing or response dump.
+                # An unknown POST outcome must be reconciled with its idempotency key.
+                status="$(curl "${args[@]}" "$base$path")"
+                case "$method:$status" in
+                  GET:200|PUT:200|PUT:201|POST:202) ;;
+                  *) die 'Service returned an unexpected HTTP status' ;;
+                esac
+              }
+              verify_signature() {
+                local record="$1" signature="$2" key="$3"
+                test -s "$record" && test -s "$signature" && test -s "$key" ||
+                  die 'A signed record or trusted verification key is missing'
+                [[ "$(wc -c < "$signature")" -le 4096 ]] || die 'Signature exceeds size limit'
+                openssl base64 -d -A -in "$signature" -out "$SCRATCH/signature.bin"
+                openssl dgst -sha256 -verify "$key" \
+                  -signature "$SCRATCH/signature.bin" "$record" >/dev/null ||
+                  die 'Signed service record verification failed'
+              }
+              operation() {
+                local base="$1" kind="$2" request="$3" output="$4" key="$5"
+                local op_id status deadline request_digest
+                request_digest="$(hash_file "$request")"
+                # These identifiers contain no credentials or submission payloads
+                # and remain available in restricted logs after scratch cleanup.
+                printf 'Requesting %s operation; idempotency SHA-256: %s\n' "$kind" "$request_digest"
+                api POST "$base" "$6" "$request" "$SCRATCH/started.json"
+                op_id="$(jq -er .operationId "$SCRATCH/started.json")"
+                object_id "$op_id"
+                printf 'Recorded %s operation ID: %s\n' "$kind" "$op_id"
+                deadline=$((SECONDS + 600))
+                while (( SECONDS < deadline )); do
+                  api GET "$base" "/v1/operations/$op_id" '' "$SCRATCH/status.json"
+                  status="$(jq -er .status "$SCRATCH/status.json")"
+                  case "$status" in
+                    queued|running) sleep 5 ;;
+                    succeeded) break ;;
+                    failed|rolled_back|cancelled|rejected)
+                      die 'Remote operation failed; its durable record contains recovery status' ;;
+                    *) die 'Unknown remote operation state' ;;
+                  esac
+                done
+                [[ "$status" == succeeded ]] ||
+                  die 'Remote operation timed out; reconcile its idempotency key before retrying'
+                api GET "$base" "/v1/operations/$op_id/result.json" '' "$output"
+                api GET "$base" "/v1/operations/$op_id/result.sig" '' "$output.sig"
+                verify_signature "$output" "$output.sig" "$key"
+                jq -e --arg id "$op_id" --arg kind "$kind" \
+                  --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" \
+                  --arg request "$request_digest" '
+                    .schema == "local-md.operation/v1" and .operationId == $id and
+                    .kind == $kind and .status == "succeeded" and
+                    .repoUUID == $repo and .pipelineUUID == $pipeline and
+                    .requestSha256 == $request and
+                    (.issuedAt | type == "string") and (.expiresAt | type == "string")
+                  ' "$output" >/dev/null || die 'Signed operation is not bound to this request'
+                # Service contracts use UTC RFC3339 timestamps with second precision.
+                jq -e '
+                  (.issuedAt | fromdateiso8601) <= (now + 60) and
+                  (.expiresAt | fromdateiso8601) > now and
+                  ((.expiresAt | fromdateiso8601) - (.issuedAt | fromdateiso8601)) <= 900
+                ' "$output" >/dev/null || die 'Signed operation result is stale or invalid'
+              }
+              fetch_manifest() {
+                local digest="$1" output="$2"
+                hex64 "$digest"
+                api GET "$RELEASE_API" "/v1/releases/sha256/$digest/manifest.json" '' "$output"
+                api GET "$RELEASE_API" "/v1/releases/sha256/$digest/manifest.sig" '' "$output.sig"
+                verify_signature "$output" "$output.sig" "$RELEASE_KEY"
+                jq -e --arg digest "$digest" --arg repo "$REPO_UUID" \
+                  --arg policy "$POLICY_SHA" --arg suite "$SUITE_SHA" --arg node "$NODE_VERSION" '
+                    .schema == "local-md.release/v1" and .digest == $digest and
+                    .repoUUID == $repo and .buildPolicySha256 == $policy and
+                    .verificationSuiteSha256 == $suite and .nodeVersion == $node and
+                    .provenanceVerified == true and .independentVerificationPassed == true and
+                    (.sourceCommit | test("^[a-f0-9]{40}$")) and
+                    (.evidenceSha256 | test("^[a-f0-9]{64}$"))
+                  ' "$output" >/dev/null || die 'Release manifest violates trusted policy'
+              }
+              environment_policy() {
+                [[ "$1" == staging || "$1" == production ]] || die 'Invalid deployment environment'
+                TARGET_ENVIRONMENT="$1"
+                TARGET_ORIGIN="$(jq -er --arg env "$1" '.deployment[$env].origin' /opt/ci/policy.json)"
+                CONFIG_SHA="$(jq -er --arg env "$1" '.deployment[$env].configurationSha256' /opt/ci/policy.json)"
+                origin "$TARGET_ORIGIN"
+                hex64 "$CONFIG_SHA"
+              }
+              assert_result_target() {
+                jq -e --arg digest "$DIGEST" --arg env "$TARGET_ENVIRONMENT" --arg config "$CONFIG_SHA" '
+                  .digest == $digest and .environment == $env and .configurationSha256 == $config
+                ' "$1" >/dev/null || die 'Result refers to a different release/environment/configuration'
+              }
+              eligibility() {
+                local mode="$1"
+                jq -nSc --arg digest "$DIGEST" --arg env "$TARGET_ENVIRONMENT" \
+                  --arg config "$CONFIG_SHA" --arg mode "$mode" --arg policy "$POLICY_SHA" \
+                  --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                  {digest:$digest, environment:$env, configurationSha256:$config,
+                   mode:$mode, policySha256:$policy, repoUUID:$repo, pipelineUUID:$pipeline}
+                ' > "$SCRATCH/eligibility-request.json"
+                operation "$RELEASE_API" eligibility "$SCRATCH/eligibility-request.json" \
+                  "$SCRATCH/eligibility.json" "$RELEASE_KEY" /v1/eligibility
+                assert_result_target "$SCRATCH/eligibility.json"
+              }
+              COMMON_BASH
+              chmod 600 .ci-inline/common.bash
+          - |
+              env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'BUILD_BASH'
+              source .ci-inline/common.bash
+              for tool in node pnpm git tar gzip gitleaks semgrep python3; do need "$tool"; done
+              [[ "$(node --version)" == "$NODE_VERSION" ]] || die 'Node version differs from trusted policy'
+              [[ "$(pnpm --version)" == "$PNPM_VERSION" && "$PNPM_VERSION" == 11.5.3 ]] ||
+                die 'pnpm version differs from this application/toolchain contract'
+              commit40 "$BITBUCKET_COMMIT"
+              [[ "$(git rev-parse HEAD)" == "$BITBUCKET_COMMIT" ]] || die 'Checkout differs from pipeline commit'
+              test -f bitbucket-pipelines.yml || die 'Activate only through a reviewed real pipeline filename'
+              test -s /opt/ci/policy/gitleaks.toml
+              test -f /opt/ci/policy/empty.gitleaksignore
+              [[ ! -s /opt/ci/policy/empty.gitleaksignore ]] || die 'Unapproved secret-scanner ignores'
+              mkdir candidate evidence
+              export SOURCE_DATE_EPOCH
+              SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$BITBUCKET_COMMIT")"
+              [[ "$SOURCE_DATE_EPOCH" =~ ^[0-9]{10,}$ ]] || die 'Invalid source timestamp'
+              export CI=true NG_CLI_ANALYTICS=false
+              export npm_config_registry="$NPM_REGISTRY"
+              export npm_config_strict_ssl=true
+              export npm_config_cafile=/opt/ci/trust/service-ca.pem
+              # A fresh store avoids cross-job cache poisoning. Registry auth, if
+              # needed, must be a read-only mirror identity with no other access.
+              STORE="$SCRATCH/pnpm-store"
+              # Source scanning rules/ignores cannot be weakened by repo files.
+              gitleaks git . --redact=100 --ignore-gitleaks-allow \
+                --config /opt/ci/policy/gitleaks.toml \
+                --gitleaks-ignore-path /opt/ci/policy/empty.gitleaksignore \
+                --report-format json --report-path evidence/source-secrets.json
+              # Source-owned ignore files and nosem comments must not remove
+              # mandatory checks. Exceptions belong to independently owned rules.
+              test ! -e .semgrepignore
+              [[ -z "$(find src -name .semgrepignore -print -quit)" ]] ||
+                die 'Repository-owned static-analysis exclusions are forbidden'
+              semgrep scan src --config /opt/ci/policy/semgrep \
+                --error --strict --metrics=off --disable-version-check \
+                --disable-nosem --no-git-ignore \
+                --json --output evidence/static-analysis.json
+              # Run independent-image source scanners before executing any
+              # dependency lifecycle or application/test code.
+              pnpm install --frozen-lockfile --store-dir "$STORE"
+              pnpm audit --audit-level high --json > evidence/dependency-audit.json
+              pnpm lint
+              pnpm run format:check
+              pnpm exec prettier --check README.md 'docs/**/*.md'
+              pnpm exec tsc --project tsconfig.spec.json --noEmit
+              pnpm run test:ci
+              # Angular enforces its existing production bundle budgets.
+              pnpm run build:prod
+              test -s dist/local-md-website/server/server.mjs
+              test -s dist/local-md-website/browser/home/index.html
+              test -s dist/local-md-website/browser/assets/Medical_Authorization_Form.pdf
+              [[ -z "$(find dist/local-md-website/browser -type f -name '*.map' -print -quit)" ]] ||
+                die 'Public source maps are forbidden by this example policy'
+
+              # Keep the root dependency declarations to match the frozen lockfile,
+              # but strip lifecycle commands from the packaged runtime manifest.
+              # Install into a directory OUTSIDE the workspace to avoid pnpm
+              # discovering the parent workspace or bundling its dev installation.
+              RUNTIME="$SCRATCH/runtime"
+              mkdir -p "$RUNTIME/dist/local-md-website"
+              jq 'del(.scripts)' package.json > "$RUNTIME/package.json"
+              cp pnpm-lock.yaml pnpm-workspace.yaml "$RUNTIME/"
+              cp -a dist/local-md-website/. "$RUNTIME/dist/local-md-website/"
+              (
+                cd "$RUNTIME"
+                pnpm install --prod --offline --ignore-scripts \
+                  --frozen-lockfile --store-dir "$STORE"
+              )
+              # The verifier checks dependency resolution using this exact package.
+              # Offline install failures are fatal; do not fall back to network.
+              RUNTIME="$RUNTIME" node <<'RUNTIME_CHECK_JS'
+              const fs = require('node:fs');
+              const path = require('node:path');
+              const { createRequire } = require('node:module');
+              const root = fs.realpathSync(process.env.RUNTIME);
+              const req = createRequire(path.join(root, 'package.json'));
+              const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+              for (const name of Object.keys(pkg.dependencies)) req.resolve(name);
+              function walk(dir) {
+                for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+                  const p = path.join(dir, item.name);
+                  if (item.isSymbolicLink()) {
+                    const resolved = fs.realpathSync(p);
+                    if (!resolved.startsWith(root + path.sep)) throw new Error('Runtime symlink escapes package');
+                  } else if (item.isDirectory()) walk(p);
+                  else if (!item.isFile()) throw new Error('Unexpected runtime file type');
+                }
+              }
+              walk(root);
+              RUNTIME_CHECK_JS
+              # Normalize ownership, timestamps, archive order and gzip metadata.
+              # This makes packaging deterministic for identical runtime inputs;
+              # it does not establish reproducibility of Angular/font inputs.
+              tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" \
+                --owner=0 --group=0 --numeric-owner --format=posix \
+                --pax-option=delete=atime,delete=ctime \
+                -C "$RUNTIME" -cf - . | gzip -n > candidate/application.tar.gz
+              DIGEST="$(hash_file candidate/application.tar.gz)"
+              hex64 "$DIGEST"
+              jq -nSc --arg digest "$DIGEST" --arg commit "$BITBUCKET_COMMIT" \
+                --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" \
+                --arg node "$NODE_VERSION" --arg pnpm "$PNPM_VERSION" \
+                --arg policy "$POLICY_SHA" --arg suite "$SUITE_SHA" \
+                --arg lock "$(hash_file pnpm-lock.yaml)" \
+                --arg definition "$(hash_file bitbucket-pipelines.yml)" '
+                {schema:"local-md.candidate/v1", digest:$digest, sourceCommit:$commit,
+                 repoUUID:$repo, pipelineUUID:$pipeline, nodeVersion:$node, pnpmVersion:$pnpm,
+                 requestedPolicySha256:$policy, verificationSuiteSha256:$suite,
+                 lockfileSha256:$lock, sourcePipelineSha256:$definition}
+              ' > candidate/request.json
+              # This is a candidate request, NOT trusted build provenance.
+              # A platform attestor must bind the actual outputs to the real run.
+              jq -nSc --arg candidate "$DIGEST" \
+                --arg gitleaks "$(gitleaks version)" --arg semgrep "$(semgrep --version)" '
+                {candidateDigest:$candidate, sourceGatesPassed:true,
+                 scanners:{gitleaks:$gitleaks,semgrep:$semgrep}}
+              ' > evidence/source-gates.json
+              printf 'Packaged candidate SHA-256: %s\n' "$DIGEST"
+              BUILD_BASH
+        artifacts:
+          - candidate/application.tar.gz
+          - candidate/request.json
+          - evidence/**
+
+    - step: &verify
+        name: Independent artifact inspection and sandboxed runtime tests
+        image:
+          name: "ci.example.invalid/local-md/verifier@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        runs-on:
+          - self.hosted
+          - linux
+          - local-md-verifier
+        clone:
+          enabled: false
+        # No OIDC. Candidate code receives no release or deployment identity.
+        script:
+          - *inline-library
+          - |
+              env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'VERIFY_BASH'
+              source .ci-inline/common.bash
+              for tool in python3 syft grype gitleaks podman tar gzip; do need "$tool"; done
+              test -s candidate/application.tar.gz
+              DIGEST="$(hash_file candidate/application.tar.gz)"
+              hex64 "$DIGEST"
+              jq -e --arg digest "$DIGEST" --arg commit "$BITBUCKET_COMMIT" \
+                --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                .schema == "local-md.candidate/v1" and .digest == $digest and
+                .sourceCommit == $commit and .repoUUID == $repo and .pipelineUUID == $pipeline
+              ' candidate/request.json >/dev/null || die 'Candidate does not match this execution'
+              # Safe extraction: validate names/types/links/limits before any writes.
+              # Do not trust a tar file because another pipeline step created it.
+              cat > .ci-inline/unpack.py <<'UNPACK_PY'
+              import os, pathlib, posixpath, sys, tarfile
+              archive, destination = sys.argv[1:]
+              root = pathlib.Path(destination)
+              root.mkdir(mode=0o755)
+              root.chmod(0o755)
+              allowed = {"dist", "node_modules", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"}
+              seen, entries, links, total = set(), [], {}, 0
+              with tarfile.open(archive, "r:gz") as tf:
+                  for item in tf:
+                      raw = item.name
+                      if raw in (".", "./") and item.isdir():
+                          continue
+                      if raw.startswith("/") or "\\" in raw or "\x00" in raw:
+                          raise ValueError("Unsafe archive name")
+                      parts = [p for p in raw.split("/") if p != "."]
+                      if not parts or any(p in ("", "..") for p in parts):
+                          raise ValueError("Unsafe archive path")
+                      name = "/".join(parts)
+                      if name in seen or parts[0] not in allowed:
+                          raise ValueError("Duplicate or unexpected archive path")
+                      seen.add(name)
+                      if len(seen) > 100000:
+                          raise ValueError("Too many archive entries")
+                      if not (item.isdir() or item.isfile() or item.issym()):
+                          raise ValueError("Special files and hard links are forbidden")
+                      if item.size < 0 or item.size > 128 * 1024 * 1024:
+                          raise ValueError("Archive member exceeds limit")
+                      total += item.size
+                      if total > 1024 * 1024 * 1024:
+                          raise ValueError("Archive expansion exceeds limit")
+                      if item.mode & 0o7000:
+                          raise ValueError("Set-ID/sticky archive modes are forbidden")
+                      if item.issym():
+                          if item.linkname.startswith("/") or "\\" in item.linkname:
+                              raise ValueError("Unsafe link target")
+                          target = posixpath.normpath(posixpath.join(posixpath.dirname(name), item.linkname))
+                          if target == ".." or target.startswith("../"):
+                              raise ValueError("Link escapes package")
+                          links[name] = item.linkname
+                      entries.append((item, name))
+                  for _, name in entries:
+                      parents = pathlib.PurePosixPath(name).parents
+                      if any(str(parent) in links for parent in parents):
+                          raise ValueError("An archive entry is nested under a symlink")
+                  for item, name in entries:
+                      output = root / name
+                      output.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+                      if item.isdir():
+                          output.mkdir(exist_ok=True, mode=0o755)
+                      elif item.isfile():
+                          source = tf.extractfile(item)
+                          if source is None:
+                              raise ValueError("Missing archive member data")
+                          with source, output.open("xb") as dest:
+                              remaining = item.size
+                              while remaining:
+                                  chunk = source.read(min(1024 * 1024, remaining))
+                                  if not chunk:
+                                      raise ValueError("Truncated archive member")
+                                  dest.write(chunk)
+                                  remaining -= len(chunk)
+                          output.chmod(0o755 if item.mode & 0o111 else 0o644)
+                  for name, target in links.items():
+                      (root / name).symlink_to(target)
+                  real_root = root.resolve()
+                  for name in links:
+                      (root / name).resolve(strict=True).relative_to(real_root)
+              required = [
+                  "package.json", "node_modules",
+                  "dist/local-md-website/server/server.mjs",
+                  "dist/local-md-website/browser/home/index.html",
+                  "dist/local-md-website/browser/assets/Medical_Authorization_Form.pdf",
+              ]
+              for name in required:
+                  if not (root / name).exists():
+                      raise ValueError("Required runtime file is missing")
+              for item in root.rglob("*"):
+                  if item.is_dir() and not item.is_symlink():
+                      item.chmod(0o755)
+                  if item.name == ".env" or item.name.startswith(".env.") or item.name == ".npmrc":
+                      raise ValueError("Runtime contains private configuration")
+                  if item.is_file() and item.name.endswith(".map") and "/browser/" in str(item):
+                      raise ValueError("Browser source maps are forbidden")
+              UNPACK_PY
+              RUNTIME="$SCRATCH/runtime"
+              python3 .ci-inline/unpack.py candidate/application.tar.gz "$RUNTIME"
+              mkdir -p evidence
+              gitleaks dir "$RUNTIME" --redact=100 --ignore-gitleaks-allow \
+                --config /opt/ci/policy/gitleaks.toml \
+                --gitleaks-ignore-path /opt/ci/policy/empty.gitleaksignore \
+                --report-format json --report-path evidence/runtime-secrets.json
+              syft "dir:$RUNTIME" --config /opt/ci/policy/syft.yaml \
+                -o syft-json=evidence/sbom.syft.json \
+                -o spdx-json=evidence/sbom.spdx.json
+              # The independently provisioned verifier permits only approved
+              # vulnerability DB updates. Grype must reject expired/unavailable
+              # databases; never use --only-fixed or an empty replacement DB.
+              export GRYPE_DB_VALIDATE_AGE=true GRYPE_DB_MAX_ALLOWED_BUILT_AGE=24h
+              grype "sbom:evidence/sbom.syft.json" --config /opt/ci/policy/grype.yaml --fail-on high \
+                -o json > evidence/runtime-vulnerabilities.json
+              grype db status --config /opt/ci/policy/grype.yaml -o json > evidence/vulnerability-db.json
+
+              # Actual HTTP checks are embedded here, not hidden behind a helper.
+              cat > .ci-inline/http-smoke.mjs <<'HTTP_JS'
+              import assert from 'node:assert/strict';
+              import http from 'node:http';
+              const paths = [
+                '/home', '/urgent-care', '/primary-care', '/occupational-health',
+                '/weight-loss', '/lab-diagnostics', '/injury-care', '/locations',
+                '/for-patients', '/careers', '/privacy-policy', '/terms-of-use',
+                '/accessibility', '/hipaa-notice',
+              ];
+              const request = (path, method = 'GET', body) => new Promise((resolve, reject) => {
+                const req = http.request({
+                  hostname: '127.0.0.1', port: 4000, path, method,
+                  headers: { Host: 'local-md.com', ...(body === undefined ? {} : {
+                    'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body),
+                  }) },
+                }, response => {
+                  const chunks = [];
+                  let size = 0;
+                  response.on('data', chunk => {
+                    size += chunk.length;
+                    if (size > 4 * 1024 * 1024) req.destroy(new Error('Response exceeds limit'));
+                    chunks.push(chunk);
+                  });
+                  response.on('error', reject);
+                  response.on('end', () => resolve({
+                    status: response.statusCode, headers: response.headers, body: Buffer.concat(chunks),
+                  }));
+                });
+                req.setTimeout(10000, () => req.destroy(new Error('HTTP test timeout')));
+                req.on('error', reject);
+                req.end(body);
+              });
+              let ready = false;
+              for (let i = 0; i < 60; i++) {
+                try { ready = (await request('/home')).status === 200; } catch {}
+                if (ready) break;
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+              assert.ok(ready, 'Packaged server did not become ready');
+              let home;
+              for (const path of paths) {
+                const result = await request(path);
+                assert.equal(result.status, 200, path);
+                assert.match(result.headers['content-type'], /text\/html/);
+                assert.match(result.headers['cache-control'], /no-cache/);
+                assert.ok(result.body.includes(Buffer.from('<app-root')), path);
+                if (result.headers['content-length']) {
+                  assert.equal(Number(result.headers['content-length']), result.body.length);
+                }
+                if (path === '/home') home = result.body.toString('utf8');
+              }
+              const script = home.match(/src="([^"]+\.js)"/);
+              assert.ok(script, 'Home page must reference a JavaScript bundle');
+              const scriptPath = new URL(script[1], 'http://local-md.com:4000/').pathname;
+              const asset = await request(scriptPath);
+              assert.equal(asset.status, 200);
+              assert.match(asset.headers['cache-control'], /immutable/);
+              const pdf = await request('/assets/Medical_Authorization_Form.pdf');
+              assert.equal(pdf.status, 200);
+              assert.equal(pdf.body.subarray(0, 5).toString(), '%PDF-');
+              assert.match(pdf.headers['cache-control'], /must-revalidate/);
+              async function api(path, expected, body) {
+                const result = await request(path, body === undefined ? 'GET' : 'POST', body);
+                assert.equal(result.status, expected, path);
+                assert.equal(result.headers['cache-control'], 'no-store');
+                assert.match(result.headers['content-type'], /application\/json/);
+                JSON.parse(result.body.toString('utf8'));
+                return result;
+              }
+              await api('/api/unknown', 404);
+              await api('/api/send-email', 400, '{invalid-json');
+              await api('/api/send-email', 413, JSON.stringify({ message: 'x'.repeat(33000) }));
+              // Invalid requests count toward the combined limiter: one valid-JSON
+              // invalid submission + four honeypots = five accepted attempts.
+              await api('/api/send-email', 400, '{}');
+              for (let i = 0; i < 4; i++) {
+                await api(i % 2 ? '/api/send-email' : '/api/medical-authorization',
+                  200, JSON.stringify({ website: 'synthetic.invalid' }));
+              }
+              const limited = await api('/api/send-email', 429, '{}');
+              assert.ok(Number(limited.headers['retry-after']) > 0);
+              console.log(JSON.stringify({ suite: 'packaged-http/v1', passed: true, routes: paths.length }));
+              HTTP_JS
+              cat > .ci-inline/browser-smoke.cjs <<'BROWSER_JS'
+              const assert = require('node:assert/strict');
+              const { chromium } = require('/opt/ci/node_modules/playwright');
+              (async () => {
+                const browser = await chromium.launch({
+                  args: ['--host-resolver-rules=MAP local-md.com 127.0.0.1', '--no-proxy-server'],
+                });
+                try {
+                  const page = await browser.newPage();
+                  // Avoid the consent banner obscuring navigation in this narrow
+                  // smoke suite. Consent UI behavior has separate app tests.
+                  await page.addInitScript(() => localStorage.setItem('lmd-cookie-consent', 'declined'));
+                  const errors = [];
+                  page.on('pageerror', error => errors.push(error.message));
+                  // The server and browser share only an isolated loopback network.
+                  // External integrations are blocked; their availability is a
+                  // separate controlled staging acceptance requirement.
+                  await page.route('**/*', route => {
+                    const url = new URL(route.request().url());
+                    return url.hostname === 'local-md.com' ? route.continue() : route.abort();
+                  });
+                  for (const path of ['/home', '/locations', '/occupational-health', '/for-patients?source=ci#faqs']) {
+                    const response = await page.goto('http://local-md.com:4000' + path);
+                    assert.equal(response.status(), 200);
+                    await page.waitForFunction(() => {
+                      const root = document.querySelector('app-root');
+                      return root && root.hasAttribute('ng-version');
+                    });
+                    assert.ok(await page.locator('app-root').innerText());
+                    // Verify navigation keeps the same document: this exercises
+                    // hydrated router handlers and lazy loading, not just SSR.
+                    await page.evaluate(() => { window.__ciDocumentIdentity = 'same-document'; });
+                    const link = page.locator('footer a[href="/urgent-care"]').first();
+                    assert.equal(await link.count(), 1);
+                    await link.click();
+                    await page.waitForURL('**/urgent-care');
+                    assert.equal(await page.evaluate(() => window.__ciDocumentIdentity), 'same-document');
+                    assert.ok(await page.locator('app-root').innerText());
+                  }
+                  assert.deepEqual(errors, []);
+                  console.log(JSON.stringify({ suite: 'packaged-browser/v1', passed: true }));
+                } finally { await browser.close(); }
+              })().catch(() => { console.error('Browser acceptance failed'); process.exitCode = 1; });
+              BROWSER_JS
+              chmod 644 .ci-inline/http-smoke.mjs .ci-inline/browser-smoke.cjs
+              RUNTIME_IMAGE="$(jq -er .runtimeImage /opt/ci/policy.json)"
+              BROWSER_IMAGE="$(jq -er .browserImage /opt/ci/policy.json)"
+              pinned_image "$RUNTIME_IMAGE"
+              pinned_image "$BROWSER_IMAGE"
+              [[ "$(podman info --format '{{.Host.Security.Rootless}}')" == true ]] ||
+                die 'Verification requires the provisioned rootless container engine'
+              podman image exists "$RUNTIME_IMAGE"
+              podman image exists "$BROWSER_IMAGE"
+              # Include the separately pinned Node/OS runtime in vulnerability
+              # evidence; scanning only application dependencies would miss it.
+              syft "podman:$RUNTIME_IMAGE" --config /opt/ci/policy/syft.yaml \
+                -o syft-json=evidence/base-image-sbom.syft.json \
+                -o spdx-json=evidence/base-image-sbom.spdx.json
+              grype sbom:evidence/base-image-sbom.syft.json \
+                --config /opt/ci/policy/grype.yaml --fail-on high \
+                -o json > evidence/base-image-vulnerabilities.json
+              podman run --rm --pull=never --network none --read-only \
+                --cap-drop ALL --security-opt no-new-privileges --user 10001:10001 \
+                --entrypoint node "$RUNTIME_IMAGE" --version > "$SCRATCH/node-version"
+              [[ "$(cat "$SCRATCH/node-version")" == "$NODE_VERSION" ]] ||
+                die 'Packaged runtime Node version differs from build policy'
+              COMMON_ARGS=(
+                --pull=never --read-only --cap-drop ALL
+                --security-opt no-new-privileges --user 10001:10001
+                --pids-limit 256 --memory 1g --cpus 2
+                --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777
+              )
+              APP="$(podman run --detach "${COMMON_ARGS[@]}" --network none \
+                --volume "$RUNTIME:/app:ro" --workdir /app \
+                --env NODE_ENV=production --env PORT=4000 --env TRUST_PROXY_HOPS=0 \
+                --entrypoint node "$RUNTIME_IMAGE" dist/local-md-website/server/server.mjs)"
+              CONTAINERS+=("$APP")
+              # Distinct test containers cannot write the application's filesystem
+              # or access its process namespace. No worker/token mounts are shared.
+              podman run --rm "${COMMON_ARGS[@]}" --network "container:$APP" \
+                --volume "$PWD/.ci-inline/http-smoke.mjs:/checks/http-smoke.mjs:ro" \
+                --entrypoint node "$RUNTIME_IMAGE" /checks/http-smoke.mjs > evidence/http-smoke.json
+              podman run --rm "${COMMON_ARGS[@]}" --network "container:$APP" \
+                --shm-size 256m \
+                --volume "$PWD/.ci-inline/browser-smoke.cjs:/checks/browser-smoke.cjs:ro" \
+                --entrypoint node "$BROWSER_IMAGE" /checks/browser-smoke.cjs > evidence/browser-smoke.json
+              podman rm --force "$APP" >/dev/null
+              CONTAINERS=()
+              jq -e '.passed == true' evidence/http-smoke.json >/dev/null
+              jq -e '.passed == true' evidence/browser-smoke.json >/dev/null
+              jq -nSc --arg digest "$DIGEST" --arg suite "$SUITE_SHA" \
+                --arg syft "$(syft version -o json | jq -r .version)" \
+                --arg grype "$(grype version -o json | jq -r .version)" '
+                {candidateDigest:$digest, verificationSuiteSha256:$suite,
+                 artifactGatesPassed:true, scanners:{syft:$syft,grype:$grype}}
+              ' > evidence/artifact-gates.json
+              tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+                --format=posix --pax-option=delete=atime,delete=ctime \
+                -C evidence -cf - . | gzip -n > candidate/evidence.tar.gz
+              printf 'Independent artifact checks passed for %s\n' "$DIGEST"
+              # Signing happens only in a later non-executing control worker.
+              # The external attestor binds this verifier's actual executed
+              # definition, isolation policy and artifact hashes to the run.
+              VERIFY_BASH
+        artifacts:
+          - candidate/application.tar.gz
+          - candidate/request.json
+          - candidate/evidence.tar.gz
+          - evidence/**
+
+    - step: &publish
+        name: Attested release publication with an external signer
+        image: &control-image
+          name: "ci.example.invalid/local-md/control@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        runs-on: &control-runners
+          - self.hosted
+          - linux
+          - local-md-control
+        clone:
+          enabled: false
+        oidc: true
+        script:
+          - *inline-library
+          - |
+              env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'PUBLISH_BASH'
+              source .ci-inline/common.bash
+              authenticate
+              [[ "${BITBUCKET_BRANCH:-}" == main ]] || die 'Only main may request a production-eligible release'
+              DIGEST="$(hash_file candidate/application.tar.gz)"
+              EVIDENCE_DIGEST="$(hash_file candidate/evidence.tar.gz)"
+              hex64 "$DIGEST"
+              hex64 "$EVIDENCE_DIGEST"
+              commit40 "$BITBUCKET_COMMIT"
+              jq -e --arg digest "$DIGEST" --arg commit "$BITBUCKET_COMMIT" \
+                --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                .schema == "local-md.candidate/v1" and .digest == $digest and
+                .sourceCommit == $commit and .repoUUID == $repo and .pipelineUUID == $pipeline
+              ' candidate/request.json >/dev/null || die 'Candidate metadata does not match this run'
+              mkdir release
+              api PUT "$RELEASE_API" "/v1/candidates/sha256/$DIGEST/application" \
+                candidate/application.tar.gz "$SCRATCH/upload.json"
+              api PUT "$RELEASE_API" "/v1/evidence/sha256/$EVIDENCE_DIGEST" \
+                candidate/evidence.tar.gz "$SCRATCH/evidence-upload.json"
+              jq -nSc --arg digest "$DIGEST" --arg evidence "$EVIDENCE_DIGEST" \
+                --arg commit "$BITBUCKET_COMMIT" --arg repo "$REPO_UUID" \
+                --arg pipeline "$BITBUCKET_PIPELINE_UUID" --arg policy "$POLICY_SHA" '
+                {digest:$digest, evidenceSha256:$evidence, sourceCommit:$commit,
+                 repoUUID:$repo, pipelineUUID:$pipeline, policySha256:$policy}
+              ' > "$SCRATCH/publish-request.json"
+              # The service must independently obtain authenticated builder and
+              # verifier attestations and authoritative source-review evidence.
+              # Uploaded scanner JSON and this request cannot substitute for them.
+              operation "$RELEASE_API" release "$SCRATCH/publish-request.json" \
+                release/publication.json "$RELEASE_KEY" /v1/releases
+              jq -e --arg digest "$DIGEST" '.digest == $digest' release/publication.json >/dev/null
+              fetch_manifest "$DIGEST" release/manifest.json
+              jq -e --arg commit "$BITBUCKET_COMMIT" --arg evidence "$EVIDENCE_DIGEST" \
+                --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                .sourceCommit == $commit and .evidenceSha256 == $evidence and .pipelineUUID == $pipeline
+              ' release/manifest.json >/dev/null || die 'Published manifest differs from reviewed candidate'
+              printf 'Signed release published: %s\n' "$DIGEST"
+              PUBLISH_BASH
+        artifacts:
+          - release/**
+
+    - step: &staging
+        name: Deploy verified release and perform independent staging acceptance
+        max-time: 45
+        image: *control-image
+        runs-on: *control-runners
+        clone:
+          enabled: false
+        oidc: true
+        deployment: Staging
+        script:
+          - export TARGET_ENVIRONMENT=staging
+          - *inline-library
+          - &deploy-inline |
+              env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'DEPLOY_BASH'
+              source .ci-inline/common.bash
+              authenticate
+              [[ "${BITBUCKET_BRANCH:-}" == main ]] || die 'Only reviewed main releases may be promoted'
+              environment_policy "$TARGET_ENVIRONMENT"
+              DIGEST="$(jq -er .digest release/manifest.json)"
+              hex64 "$DIGEST"
+              # Local artifacts are only a locator; re-fetch and verify authoritative
+              # signed bytes before submitting any deployment request.
+              fetch_manifest "$DIGEST" "$SCRATCH/manifest.json"
+              jq -e --arg commit "$BITBUCKET_COMMIT" '.sourceCommit == $commit' \
+                "$SCRATCH/manifest.json" >/dev/null || die 'Release source differs from this pipeline'
+              eligibility deploy
+              if [[ "$TARGET_ENVIRONMENT" == production ]]; then
+                test -s staging/acceptance.json
+                verify_signature staging/acceptance.json staging/acceptance.json.sig "$CONTROL_KEY"
+                jq -e --arg digest "$DIGEST" --arg suite "$SUITE_SHA" '
+                  .kind == "acceptance" and .status == "succeeded" and
+                  .digest == $digest and .environment == "staging" and
+                  .acceptanceSuiteSha256 == $suite
+                ' staging/acceptance.json >/dev/null || die 'Same-digest staging acceptance is required'
+                # The server independently checks acceptance age, staging config,
+                # current production config, approver independence and expiry.
+                ACCEPTANCE_ID="$(jq -er .acceptanceId staging/acceptance.json)"
+                object_id "$ACCEPTANCE_ID"
+              else
+                ACCEPTANCE_ID=''
+              fi
+              mkdir -p "$TARGET_ENVIRONMENT"
+              jq -nSc --arg digest "$DIGEST" --arg env "$TARGET_ENVIRONMENT" \
+                --arg config "$CONFIG_SHA" --arg repo "$REPO_UUID" \
+                --arg pipeline "$BITBUCKET_PIPELINE_UUID" --arg policy "$POLICY_SHA" \
+                --arg acceptance "$ACCEPTANCE_ID" '
+                {digest:$digest, environment:$env, configurationSha256:$config,
+                 repoUUID:$repo, pipelineUUID:$pipeline, policySha256:$policy,
+                 stagingAcceptanceId: (if $acceptance == "" then null else $acceptance end)}
+              ' > "$SCRATCH/deploy-request.json"
+              # Production approval is enforced by the service, not by a caller
+              # supplied approval=true flag or Bitbucket's manual trigger.
+              operation "$CONTROL_API" deploy "$SCRATCH/deploy-request.json" \
+                "$TARGET_ENVIRONMENT/deployment.json" "$CONTROL_KEY" /v1/deployments
+              assert_result_target "$TARGET_ENVIRONMENT/deployment.json"
+              DEPLOYMENT_ID="$(jq -er .deploymentId "$TARGET_ENVIRONMENT/deployment.json")"
+              object_id "$DEPLOYMENT_ID"
+              if [[ "$TARGET_ENVIRONMENT" == staging ]]; then
+                jq -nSc --arg deployment "$DEPLOYMENT_ID" --arg digest "$DIGEST" \
+                  --arg config "$CONFIG_SHA" --arg repo "$REPO_UUID" \
+                  --arg pipeline "$BITBUCKET_PIPELINE_UUID" --arg suite "$SUITE_SHA" '
+                  {deploymentId:$deployment, digest:$digest, environment:"staging",
+                   configurationSha256:$config, repoUUID:$repo, pipelineUUID:$pipeline,
+                   acceptanceSuiteSha256:$suite}
+                ' > "$SCRATCH/accept-request.json"
+                operation "$CONTROL_API" acceptance "$SCRATCH/accept-request.json" \
+                  staging/acceptance.json "$CONTROL_KEY" /v1/acceptances
+                assert_result_target staging/acceptance.json
+                jq -e --arg suite "$SUITE_SHA" '.acceptanceSuiteSha256 == $suite' \
+                  staging/acceptance.json >/dev/null || die 'Unexpected acceptance suite'
+              fi
+              # The controller performs candidate + post-switch checks and
+              # recovery. Client failure never reports a deployment as accepted.
+              # Correct cache rules often make purge unnecessary.
+              jq -nSc --arg deployment "$DEPLOYMENT_ID" --arg digest "$DIGEST" \
+                --arg env "$TARGET_ENVIRONMENT" --arg config "$CONFIG_SHA" \
+                --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                {deploymentId:$deployment, digest:$digest, environment:$env,
+                 configurationSha256:$config, repoUUID:$repo, pipelineUUID:$pipeline}
+              ' > "$SCRATCH/cache-request.json"
+              operation "$CONTROL_API" cache "$SCRATCH/cache-request.json" \
+                "$TARGET_ENVIRONMENT/cache.json" "$CONTROL_KEY" /v1/cache-revalidations
+              assert_result_target "$TARGET_ENVIRONMENT/cache.json"
+              printf 'Accepted %s deployment of %s\n' "$TARGET_ENVIRONMENT" "$DIGEST"
+              DEPLOY_BASH
+        artifacts:
+          - staging/**
+          - production/**
+
+    - step: &production
+        name: Independently approved production promotion of the same digest
+        image: *control-image
+        runs-on: *control-runners
+        clone:
+          enabled: false
+        oidc: true
+        deployment: Production
+        trigger: manual
+        script:
+          - export TARGET_ENVIRONMENT=production
+          - *inline-library
+          - *deploy-inline
+        artifacts:
+          - production/**
+
+pipelines:
+  default:
+    - step: *build
+    - step: *verify
+
+  pull-requests:
+    "**":
+      - step: *build
+      - step: *verify
+
+  branches:
+    dev:
+      # Production-mode candidates only: no public debug build, publishing or
+      # deployment credentials on the development branch in this design.
+      - step: *build
+      - step: *verify
+
+    main:
+      - step: *build
+      - step: *verify
+      - step: *publish
+      - step: *staging
+      - step: *production
+
+  custom:
+    rollback-production:
+      - variables:
+          - name: RELEASE_SHA256
+      - step:
+          name: Restore an eligible previously accepted production release
+          image: *control-image
+          runs-on: *control-runners
+          clone:
+            enabled: false
+          oidc: true
+          deployment: Production
+          script:
+            - *inline-library
+            - |
+                env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'ROLLBACK_BASH'
+                source .ci-inline/common.bash
+                authenticate
+                [[ "${BITBUCKET_BRANCH:-}" == main ]] || die 'Run rollback from the protected main pipeline definition'
+                environment_policy production
+                DIGEST="${RELEASE_SHA256:?Select a retained application SHA-256 digest}"
+                hex64 "$DIGEST"
+                fetch_manifest "$DIGEST" "$SCRATCH/manifest.json"
+                # An older source commit is expected; never rebuild it here.
+                eligibility rollback
+                mkdir -p production
+                jq -nSc --arg digest "$DIGEST" --arg config "$CONFIG_SHA" \
+                  --arg repo "$REPO_UUID" --arg pipeline "$BITBUCKET_PIPELINE_UUID" \
+                  --arg policy "$POLICY_SHA" '
+                  {digest:$digest, environment:"production", configurationSha256:$config,
+                   repoUUID:$repo, pipelineUUID:$pipeline, policySha256:$policy}
+                ' > "$SCRATCH/rollback-request.json"
+                # Controller checks prior successful production acceptance,
+                # independent rollback authorization, revocation, vulnerabilities
+                # and compatibility with the approved configuration reference.
+                operation "$CONTROL_API" rollback "$SCRATCH/rollback-request.json" \
+                  production/rollback.json "$CONTROL_KEY" /v1/rollbacks
+                assert_result_target production/rollback.json
+                DEPLOYMENT_ID="$(jq -er .deploymentId production/rollback.json)"
+                object_id "$DEPLOYMENT_ID"
+                jq -nSc --arg deployment "$DEPLOYMENT_ID" --arg digest "$DIGEST" \
+                  --arg config "$CONFIG_SHA" --arg repo "$REPO_UUID" \
+                  --arg pipeline "$BITBUCKET_PIPELINE_UUID" '
+                  {deploymentId:$deployment, digest:$digest, environment:"production",
+                   configurationSha256:$config, repoUUID:$repo, pipelineUUID:$pipeline}
+                ' > "$SCRATCH/cache-request.json"
+                operation "$CONTROL_API" cache "$SCRATCH/cache-request.json" \
+                  production/cache.json "$CONTROL_KEY" /v1/cache-revalidations
+                assert_result_target production/cache.json
+                printf 'Verified rollback completed for %s\n' "$DIGEST"
+                ROLLBACK_BASH
+          artifacts:
+            - production/**
+
+    reassess-retained-release:
+      - variables:
+          - name: RELEASE_SHA256
+      - step:
+          name: Reassess a retained release without executing it in this worker
+          image: *control-image
+          runs-on: *control-runners
+          clone:
+            enabled: false
+          oidc: true
+          script:
+            - *inline-library
+            - |
+                env -u BASH_ENV -u ENV -u NODE_OPTIONS bash <<'REASSESS_BASH'
+                source .ci-inline/common.bash
+                authenticate
+                [[ "${BITBUCKET_BRANCH:-}" == main ]] || die 'Use the protected main pipeline definition'
+                DIGEST="${RELEASE_SHA256:?Select a retained application SHA-256 digest}"
+                hex64 "$DIGEST"
+                # Reassessment can examine releases built under older policies.
+                # The service checks the historical signature and applies current
+                # policy; it can revoke eligibility without deleting audit history.
+                mkdir -p reassessment
+                jq -nSc --arg digest "$DIGEST" --arg repo "$REPO_UUID" \
+                  --arg pipeline "$BITBUCKET_PIPELINE_UUID" --arg policy "$POLICY_SHA" '
+                  {digest:$digest, repoUUID:$repo, pipelineUUID:$pipeline, policySha256:$policy}
+                ' > "$SCRATCH/reassess-request.json"
+                operation "$RELEASE_API" reassess "$SCRATCH/reassess-request.json" \
+                  reassessment/result.json "$RELEASE_KEY" /v1/reassessments
+                jq -e --arg digest "$DIGEST" '.digest == $digest' reassessment/result.json >/dev/null
+                printf 'Current security reassessment completed for %s\n' "$DIGEST"
+                REASSESS_BASH
+          artifacts:
+            - reassessment/**

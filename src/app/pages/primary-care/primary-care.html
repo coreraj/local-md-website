@@ -1,0 +1,137 @@
+<div class="primary-care-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="The efficiency of urgent care. The continuity of a doctor who knows you."
+    i18n-headline="@@primaryCare.headline"
+    bodytext="Build an ongoing relationship with a provider who manages your long-term health — with the same convenience you expect from Local MD."
+    i18n-bodytext="@@primaryCare.subhead"
+    [backgroundImage]="'assets/primary_care_hero.webp'"
+  >
+    <a routerLink="/for-patients" class="btn-become-patient" i18n="@@common.ctas.becomePatient">
+      Become a Patient
+    </a>
+  </app-hero>
+
+  <!-- 2. Primary Care Services (Subtitle, Header, Paragraph, 9 Cards) -->
+  <section class="primary-services">
+    <div class="services-container">
+      <span class="services-subtitle" i18n="@@primaryCare.services.subtitle"
+        >PRIMARY CARE SERVICES</span
+      >
+      <h2 class="services-title" i18n="@@primaryCare.services.headline">
+        Care that looks at the whole picture
+      </h2>
+      <p class="services-desc" i18n="@@primaryCare.body">
+        Urgent care is there for the unexpected. Primary care is there for everything else — the
+        annual physical, the blood pressure you're keeping an eye on, the diabetes management that
+        keeps you healthy for the long haul. At Local MD, you can have both under one roof, with
+        your records and lab results in one place. And with our own in-house laboratory, the
+        bloodwork your primary care visit calls for gets run without the runaround.
+      </p>
+
+      <!-- 3x3 Responsive Grid of exactly 9 Service Cards -->
+      <div class="services-grid">
+        <!-- Card 1 -->
+        <app-service-card
+          icon="exam"
+          title="Annual Physical Exams"
+          description="Comprehensive yearly check-ups to catch issues early and keep you on track."
+          [showButton]="false"
+          i18n-title="@@srv.card.1.title"
+          i18n-description="@@srv.card.1.desc"
+        ></app-service-card>
+
+        <!-- Card 2 -->
+        <app-service-card
+          icon="urgent-care"
+          title="Chronic & Preventive Care"
+          description="Ongoing management and screenings to prevent problems before they start."
+          [showButton]="false"
+          i18n-title="@@srv.card.2.title"
+          i18n-description="@@srv.card.2.desc"
+        ></app-service-card>
+
+        <!-- Card 3 -->
+        <app-service-card
+          icon="blood-test"
+          title="Diabetes Care"
+          description="Monitoring, medication management, and lifestyle support for diabetes."
+          [showButton]="false"
+          i18n-title="@@srv.card.3.title"
+          i18n-description="@@srv.card.3.desc"
+        ></app-service-card>
+
+        <!-- Card 4 -->
+        <app-service-card
+          icon="blood-pressure"
+          title="Blood Pressure Treatment"
+          description="Hypertension management to protect your heart and long-term health."
+          [showButton]="false"
+          i18n-title="@@srv.card.4.title"
+          i18n-description="@@srv.card.4.desc"
+        ></app-service-card>
+
+        <!-- Card 5 -->
+        <app-service-card
+          icon="lungs"
+          title="Asthma Management"
+          description="Personalized plans to keep breathing easy and reduce flare-ups."
+          [showButton]="false"
+          i18n-title="@@srv.card.5.title"
+          i18n-description="@@srv.card.5.desc"
+        ></app-service-card>
+
+        <!-- Card 6 -->
+        <app-service-card
+          icon="cardiovascular-health"
+          title="Cardiovascular Health"
+          description="Risk assessment and ongoing care to keep your heart healthy."
+          [showButton]="false"
+          i18n-title="@@srv.card.6.title"
+          i18n-description="@@srv.card.6.desc"
+        ></app-service-card>
+
+        <!-- Card 7 -->
+        <app-service-card
+          icon="behavior"
+          title="Behavioral Health"
+          description="Compassionate support for mental and emotional wellbeing."
+          [showButton]="false"
+          i18n-title="@@srv.card.7.title"
+          i18n-description="@@srv.card.7.desc"
+        ></app-service-card>
+
+        <!-- Card 8 -->
+        <app-service-card
+          icon="vaccination"
+          title="Immunizations"
+          description="Routine and seasonal vaccines to keep you and your family protected."
+          [showButton]="false"
+          i18n-title="@@srv.card.8.title"
+          i18n-description="@@srv.card.8.desc"
+        ></app-service-card>
+
+        <!-- Card 9 -->
+        <app-service-card
+          icon="labb"
+          title="In-house Lab Work"
+          description="Blood work and molecular testing run on site — results without the runaround."
+          [showButton]="false"
+          i18n-title="@@srv.card.9.title"
+          i18n-description="@@srv.card.9.desc"
+        ></app-service-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Bottom Gradient Banner ("One Visit") -->
+  <app-cta-banner
+    title="One visit. Everything you need."
+    i18n-title="@@ctaBanner.oneVisit.title"
+    description="Treatment, testing, and the equipment to recover — all under one roof."
+    i18n-description="@@ctaBanner.oneVisit.desc"
+    buttonText="SAVE MY SPOT"
+    i18n-buttonText="@@header.cta.saveMySpot"
+    buttonLink="/locations"
+  ></app-cta-banner>
+</div>

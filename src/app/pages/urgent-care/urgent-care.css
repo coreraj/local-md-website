@@ -1,0 +1,273 @@
+/* Urgent Care page styling */
+.urgent-care-page {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 1. Hero Section Content (Actions) */
+
+.hero-actions {
+  margin-top: 8px;
+}
+
+/* Common Section Typography */
+.section-subtitle {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--accent-crimson);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.section-desc {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 900px;
+  margin-bottom: 48px;
+}
+
+/* 2. "WHAT WE TREAT" Section (Stretched to match full desktop size) */
+.what-we-treat-section {
+  padding: 80px 0;
+  background-color: var(--white);
+}
+
+.what-we-treat-section .container {
+  max-width: 1528px;
+  width: calc(100% - 64px);
+  margin: 0 auto;
+}
+
+.treat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 400px);
+  gap: 0;
+  margin-top: 40px;
+  width: 800px;
+}
+
+.treat-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.treat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 64px;
+  padding: 8px 0;
+  border-bottom: 2px solid #8c8c8c;
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.treat-item:hover .treat-text {
+  color: var(--accent-crimson);
+}
+
+.treat-text {
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 600;
+  color: #323232;
+  transition: all 0.25s ease;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+/* 3. SERVICES Section */
+.services-section {
+  padding: 80px 0;
+  background-color: #fafaf9;
+}
+
+.services-section .container {
+  max-width: 1528px;
+  width: calc(100% - 64px);
+  margin: 0 auto;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: var(--white);
+  border: 2px solid #8c8c8c;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 246px;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border-color: var(--slate-blue);
+}
+
+.card-accent-bar {
+  width: 8px;
+  background-color: var(--accent-crimson);
+  flex-shrink: 0;
+  border-radius: 15px 0 0 15px;
+}
+
+.card-inner {
+  display: flex;
+  padding: 24px;
+  gap: 20px;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+.card-icon-col {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  background: rgba(123, 188, 198, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal-vectors);
+}
+
+.card-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: #323232;
+  line-height: 1.2;
+}
+
+.card-desc {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Tablet View (max-width: 1200px) */
+@media (max-width: 1200px) {
+  .what-we-treat-section .container,
+  .services-section .container,
+  .business-container {
+    width: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .section-title {
+    font-size: 3.25rem;
+  }
+
+  .treat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    max-width: 100%;
+    gap: 0;
+  }
+
+  .treat-text {
+    font-size: 24px;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .business-title {
+    font-size: 3rem;
+  }
+
+  .business-desc {
+    font-size: 1.25rem;
+  }
+}
+
+/* Mobile View (max-width: 768px) */
+@media (max-width: 768px) {
+  .what-we-treat-section .container,
+  .services-section .container,
+  .business-container {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .section-desc {
+    font-size: 1rem;
+    margin-bottom: 32px;
+  }
+
+  .treat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    max-width: 100%;
+    gap: 0;
+  }
+
+  .treat-text {
+    font-size: 18px;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .service-card {
+    min-height: auto;
+  }
+
+  /* On Mobile, remove description text - just keep icon & title */
+  .service-card .card-desc {
+    display: none !important;
+  }
+
+  .card-inner {
+    padding: 16px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .card-icon-col {
+    width: 56px;
+    height: 56px;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Extra small mobile screen optimizations */
+@media (max-width: 480px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+}

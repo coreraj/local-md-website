@@ -1,0 +1,77 @@
+# DigitalOcean App Platform spec for the Local MD website (Angular 22 SSR + Express).
+# Create the app with:  doctl apps create --spec .do/app.yaml
+# or paste it into Apps -> Create App -> "Edit app spec" in the control panel.
+# Secret values are NOT stored here; set them in the control panel after creation.
+name: local-md-website
+region: nyc
+
+services:
+  - name: web
+    github:
+      repo: ad-loc-md/website-
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    # pnpm 11.5.3 is pinned via "packageManager" in package.json (installed through corepack).
+    build_command: pnpm run build:prod
+    # The server must run from the full dist/ directory (browser + server + PDF asset).
+    run_command: node dist/local-md-website/server/server.mjs
+    http_port: 8080
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    # There is no /health endpoint; /home is prerendered and cheap to serve.
+    health_check:
+      http_path: /home
+      initial_delay_seconds: 10
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: production
+        scope: RUN_AND_BUILD_TIME
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+      # Overrides angular.json's build-time allowedHosts at runtime. ${APP_DOMAIN} is the
+      # app's primary domain (the *.ondigitalocean.app URL until a custom domain is set).
+      - key: NG_ALLOWED_HOSTS
+        value: local-md.com,www.local-md.com,${APP_DOMAIN}
+        scope: RUN_TIME
+      # App Platform puts one load balancer in front of the app. Verify after the first
+      # deploy that rate limiting sees real visitor IPs (see docs/OPERATIONS.md).
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+        scope: RUN_TIME
+      - key: SMTP_HOST
+        scope: RUN_TIME
+        value: replace-me
+      - key: SMTP_PORT
+        scope: RUN_TIME
+        value: "587"
+      - key: SMTP_SECURE
+        scope: RUN_TIME
+        value: "false"
+      - key: SMTP_USER
+        scope: RUN_TIME
+        type: SECRET
+        value: replace-me
+      - key: SMTP_PASS
+        scope: RUN_TIME
+        type: SECRET
+        value: replace-me
+      - key: SMTP_FROM
+        scope: RUN_TIME
+        value: website@local-md.com
+      - key: SMTP_RECIPIENT
+        scope: RUN_TIME
+        value: replace-me@example.com
+      - key: MED_AUTH_RECIPIENT
+        scope: RUN_TIME
+        value: replace-me@example.com
+
+# Uncomment once DNS for local-md.com is ready to point at App Platform.
+# domains:
+#   - domain: local-md.com
+#     type: PRIMARY
+#   - domain: www.local-md.com
+#     type: ALIAS

@@ -1,0 +1,456 @@
+<div class="homepage">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="Same-day care, without the wait."
+    i18n-headline="@@home.hero.headline"
+    bodytext="We’re not like a typical urgent care that hands you an antibiotic without knowing what’s actually wrong. We run our own state-of-the-art laboratory in house to find the exact source of your illness — and treat it right the first time. No trial and error."
+    i18n-bodytext="@@home.hero.subhead"
+    [backgroundImage]="'assets/homepage_hero.webp'"
+  >
+    <!-- Translucent Working Times Card (Glassmorphic panel overlay) -->
+    <div class="working-time-card">
+      <div class="open-badge-container">
+        <span class="open-today-badge" i18n="@@home.hero.workingTime.badge">OPEN TODAY</span>
+      </div>
+
+      <div class="location-picker-wrapper">
+        <label for="hero-clinic-select" class="picker-label">Clinic Location:</label>
+        <select
+          id="hero-clinic-select"
+          class="hero-clinic-select"
+          [value]="selectedLocationId()"
+          (change)="selectedLocationId.set($any($event.target).value)"
+        >
+          @for (clinic of locationsList(); track clinic.id) {
+            <option [value]="clinic.id">
+              {{ clinic.name }}, {{ clinic.state === 'Illinois' ? 'IL' : 'IN' }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <h2 class="panel-card-title">{{ selectedClinic().name }} Clinic Hours</h2>
+      <p class="selected-clinic-address">{{ selectedClinic().address }}</p>
+
+      <div class="working-hours-list">
+        <div class="hours-row">
+          <span class="day-label">Mon-Fri</span>
+          <span class="time-value">{{ selectedClinic().hours.monFri }}</span>
+        </div>
+        <div class="hours-row">
+          <span class="day-label">Saturday</span>
+          <span class="time-value" [class.closed-text]="selectedClinic().hours.sat === 'Closed'">
+            {{ selectedClinic().hours.sat }}
+          </span>
+        </div>
+        <div class="hours-row">
+          <span class="day-label">Sunday</span>
+          <span class="time-value" [class.closed-text]="selectedClinic().hours.sun === 'Closed'">
+            {{ selectedClinic().hours.sun }}
+          </span>
+        </div>
+      </div>
+
+      <a
+        [href]="selectedClinic().reserveUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-reserve-spot"
+      >
+        Reserve Your Spot Online
+      </a>
+
+      <p class="average-wait-text">Walk-ins Welcome · Short Wait Times</p>
+    </div>
+  </app-hero>
+
+  <!-- 2. "WHY LOCAL MD" Comparative Matrix Section -->
+  <section class="why-us-section">
+    <div class="why-us-container">
+      <div class="section-header">
+        <span class="section-subtitle" i18n="@@home.whyUs.subtitle">WHY LOCAL MD</span>
+        <h2 class="section-title" i18n="@@home.whyUs.headline">
+          Same-day care without the ER price tag — or the wait.
+        </h2>
+        <p class="section-desc" i18n="@@home.whyUs.desc">
+          The emergency room means hours of waiting and the highest bills. Hospital-owned urgent
+          cares aren’t much better. Local MD is family-owned, efficient, and built to get you seen —
+          and out — fast.
+        </p>
+      </div>
+
+      <!-- Comparative Column Cards -->
+      <div class="comparison-grid">
+        <!-- Column 1: Local MD (Highlighted in soft red background & crimson border) -->
+        <div class="comparison-card highlighted-crimson card-localmd">
+          <div class="comp-card-inner">
+            <h3 class="comp-card-title text-crimson" i18n="@@home.comparison.local.title">
+              Local MD Urgent Care
+            </h3>
+            <div class="comp-metrics-row">
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.averageWait"
+                  >AVERAGE WAIT</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.local.wait"
+                  >Under 15 min</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.cost">COST</span>
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.local.cost"
+                  >Affordable, transparent</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.experience"
+                  >EXPERIENCE</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.local.exp"
+                  >Fast, clean, family-owned</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Emergency Room -->
+        <div class="comparison-card border-standard card-er">
+          <div class="comp-card-inner">
+            <h3 class="comp-card-title" i18n="@@home.comparison.er.title">Emergency Room</h3>
+            <div class="comp-metrics-row">
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.averageWait"
+                  >AVERAGE WAIT</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.er.wait"
+                  >4+ hours</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.cost">COST</span>
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.er.cost"
+                  >Most expensive</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.experience"
+                  >EXPERIENCE</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.er.exp"
+                  >Crowded, impersonal</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Hospital-Based Urgent Care -->
+        <div class="comparison-card border-standard card-hospital">
+          <div class="comp-card-inner">
+            <h3 class="comp-card-title" i18n="@@home.comparison.hospital.title">
+              Hospital-Based Urgent Care
+            </h3>
+            <div class="comp-metrics-row">
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.averageWait"
+                  >AVERAGE WAIT</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.hospital.wait"
+                  >1+ hours</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.cost">COST</span>
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.hospital.cost"
+                  >Higher cost</span
+                >
+              </div>
+              <div class="comp-detail-block">
+                <span class="comp-label" i18n="@@home.comparison.labels.experience"
+                  >EXPERIENCE</span
+                >
+                <span class="comp-value text-charcoal" i18n="@@home.comparison.hospital.exp"
+                  >Tied to hospital billing</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. "WHAT WE DO" Grid Section -->
+  <section class="what-we-do-section">
+    <div class="what-we-do-container">
+      <div class="section-header">
+        <span class="section-subtitle" i18n="@@home.whatWeDo.subtitle">WHAT WE DO</span>
+        <h2 class="section-title" i18n="@@home.whatWeDo.headline">
+          One network. Five lines of care.
+        </h2>
+        <p class="section-desc" i18n="@@home.whatWeDo.desc">
+          From the sniffles to chronic conditions to workplace health — plus diagnostics and
+          equipment most urgent cares can't offer.
+        </p>
+      </div>
+
+      <!-- 3x2 Grid for lines of care -->
+      <div class="care-lines-grid">
+        <!-- Card 1: Urgent Care -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="urgent-care" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.urgent.title">Urgent Care</h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.urgent.desc">
+                Same-day walk-in treatment for everyday illnesses and injuries - no appointment
+                needed.
+              </p>
+              <a routerLink="/urgent-care" class="care-card-link" i18n="@@home.whatWeDo.card.btn">
+                EXPLORE
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Primary Care -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="primary-care" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.primary.title">
+                Primary Care
+              </h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.primary.desc">
+                Ongoing care for chronic conditions, prevention, and your annual physical.
+              </p>
+              <a routerLink="/primary-care" class="care-card-link" i18n="@@home.whatWeDo.card.btn">
+                EXPLORE
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Occupational Health -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="occupational-health" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.occupational.title">
+                Occupational Health
+              </h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.occupational.desc">
+                Physical assessments, injury care, and employee programs that keep teams working.
+              </p>
+              <a
+                routerLink="/occupational-health"
+                class="care-card-link"
+                i18n="@@home.whatWeDo.card.btn"
+              >
+                EXPLORE
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Lab & Diagnostics -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="labb" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.lab.title">
+                Lab & Diagnostics
+              </h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.lab.desc">
+                On-site molecular testing with next-day, pathogen-specific results.
+              </p>
+              <a
+                routerLink="/lab-diagnostics"
+                class="care-card-link"
+                i18n="@@home.whatWeDo.card.btn"
+              >
+                EXPLORE
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Injury Care (DME) -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="injury" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.injury.title">
+                Durable medical equipment
+              </h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.injury.desc">
+                Braces, supports, and durable medical equipment dispensed at your visit.
+              </p>
+              <a routerLink="/injury-care" class="care-card-link" i18n="@@home.whatWeDo.card.btn">
+                EXPLORE
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: For Patients -->
+        <div class="care-line-card">
+          <div class="left-crimson-bar"></div>
+          <div class="care-card-content">
+            <div class="care-card-icon-col">
+              <app-icon name="location" [size]="48" color="#7BBCC6"></app-icon>
+            </div>
+            <div class="care-card-info-col">
+              <h3 class="care-card-title" i18n="@@home.whatWeDo.card.patients.title">
+                10 Locations
+              </h3>
+              <p class="care-card-desc" i18n="@@home.whatWeDo.card.patients.desc">
+                Across Illinois & Indiana, open 7 days a week. Find the one near you.
+              </p>
+              <a
+                routerLink="/locations"
+                class="care-card-link"
+                i18n="@@home.whatWeDo.card.patients.btn"
+              >
+                FIND A CLINIC
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Locations Search & Card Panel Section -->
+  @defer (on viewport; hydrate on viewport) {
+    <section class="locations-section">
+      <div class="locations-container">
+        <div class="section-header-row">
+          <div class="loc-titles">
+            <span class="section-subtitle" i18n="@@home.locations.subtitle"
+              >10 LOCATIONS & GROWING</span
+            >
+            <h2 class="section-title" i18n="@@home.locations.headline">Find care near you</h2>
+          </div>
+
+          <!-- Proximity sort badge & button -->
+          <div class="sort-controls">
+            <button
+              class="geo-sort-btn"
+              (click)="requestUserLocation()"
+              [class.has-location]="userLocation() !== null"
+              [class.loading]="isGeoLoading()"
+            >
+              <app-icon name="sort" [size]="18"></app-icon>
+              <span>
+                @if (userLocation()) {
+                  <span i18n="@@locations.sortedByProximity">Sorted by proximity</span>
+                } @else {
+                  <span i18n="@@locations.sortByProximity">Sort by proximity</span>
+                }
+              </span>
+              @if (isGeoLoading()) {
+                <span class="geo-spinner"></span>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Locations Grid Display -->
+        <div class="locations-grid">
+          @for (loc of filteredLocations(); track loc.id) {
+            <div class="location-card">
+              <span class="loc-state" [class.indiana-state]="loc.state === 'Indiana'">{{
+                loc.state
+              }}</span>
+              <div class="loc-card-body">
+                <h3 class="loc-city-name">{{ loc.name }}</h3>
+                <p class="loc-address-text">{{ loc.address }}</p>
+                <a [href]="'tel:' + loc.phone" class="loc-phone-link">{{ loc.phone }}</a>
+
+                <!-- Distance calculation label -->
+                @if (loc.distance !== undefined) {
+                  <div class="distance-wrapper">
+                    <p class="proximity-label">
+                      <app-icon name="location" [size]="14" color="#365873"></app-icon>
+                      <span>{{ loc.distance | number: '1.2-2' }}</span>
+                      <span i18n="@@locations.milesFromYou"> miles from you</span>
+                    </p>
+                  </div>
+                }
+              </div>
+              <a
+                [href]="loc.reserveUrl || '#'"
+                target="_blank"
+                class="btn-card-reserve"
+                (click)="$event.stopPropagation()"
+                i18n="@@home.locations.card.reserve"
+              >
+                Save My Spot
+              </a>
+            </div>
+          }
+        </div>
+
+        <!-- Geolocation Error Toast Notification -->
+        @if (geoError()) {
+          <div class="toast-notification">
+            <app-icon name="sort" [size]="18" color="#D41F38"></app-icon>
+            <span class="toast-message">{{ geoError() }}</span>
+            <button class="toast-close-btn" (click)="geoError.set(null)" aria-label="Dismiss">
+              ×
+            </button>
+          </div>
+        }
+
+        <!-- Caret down icon linking to Locations overview -->
+        <div class="locations-scroll-more">
+          <a routerLink="/locations" class="loc-more-link" aria-label="View all locations">
+            <app-icon name="down" [size]="28" color="#211E0D" class="bounce-arrow"></app-icon>
+          </a>
+        </div>
+      </div>
+    </section>
+  } @placeholder {
+    <section class="locations-section locations-defer-placeholder" aria-hidden="true"></section>
+  }
+
+  <!-- 5. Businesses Banner Section -->
+  <section class="businesses-section">
+    <div class="business-container">
+      <div class="biz-badge-row">
+        <span class="business-eyebrow-badge" i18n="@@home.businesses.badge">FOR BUSINESSES</span>
+      </div>
+      <h2 class="business-headline" i18n="@@home.businesses.headline">
+        Healthier teams, less downtime
+      </h2>
+      <p class="business-desc" i18n="@@home.businesses.desc">
+        Partner with Local MD for pre-employment and DOT physicals, drug screening, injury care, and
+        on-site programs built around your operations.
+      </p>
+      <a
+        routerLink="/occupational-health"
+        class="btn-businesses-partner"
+        i18n="@@home.businesses.btn"
+      >
+        Explore Occupational Health
+      </a>
+    </div>
+  </section>
+</div>

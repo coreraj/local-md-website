@@ -1,0 +1,192 @@
+/* Primary Care page styling */
+.home-page {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 2. Primary Care Services (Section layout matching screenshot) */
+.primary-services {
+  padding: 90px 0;
+  background-color: #ffffff;
+}
+
+.services-container {
+  max-width: 1592px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.services-subtitle {
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 800;
+  color: #d41f38; /* Branding Crimson */
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.services-title {
+  font-family: var(--font-heading);
+  font-size: 64px;
+  font-weight: 800;
+  color: #211e0d;
+  line-height: 1.15;
+  margin-bottom: 24px;
+}
+
+.services-desc {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #5b5656;
+  max-width: 1100px;
+  margin-bottom: 50px;
+}
+
+/* Service Card Grid (Exactly 3 Columns on desktop, stacking on mobile) */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.service-card {
+  position: relative;
+  background-color: #ffffff;
+  border: 2px solid #8c8c8c;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  border-color: #211e0d;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+}
+
+/* Thin red left border indicator */
+.card-accent-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  background-color: #d41f38;
+}
+
+.card-inner {
+  display: flex;
+  flex-direction: row;
+  padding: 24px 24px 24px 28px;
+  gap: 18px;
+  width: 100%;
+}
+
+.card-icon-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.card-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+  color: #323232;
+  line-height: 1.25;
+}
+
+.card-desc {
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #5b5656;
+}
+
+/* Responsiveness breakpoints styling */
+@media (max-width: 1200px) {
+  .services-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .services-title {
+    font-size: 48px;
+  }
+
+  .services-subtitle {
+    font-size: 24px;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card-title {
+    font-size: 28px;
+  }
+
+  .card-desc {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .services-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .services-title {
+    font-size: 32px;
+  }
+
+  .services-subtitle {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .services-desc {
+    font-size: 15px;
+    margin-bottom: 30px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .service-card {
+    border-radius: 6px;
+  }
+
+  .card-inner {
+    padding: 16px 16px 16px 20px;
+    gap: 12px;
+  }
+
+  .card-accent-bar {
+    width: 6px;
+  }
+
+  .card-title {
+    font-size: 22px;
+  }
+
+  .card-desc {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,225 @@
+/* Service Card styling matching Figma dimensions */
+.service-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #ffffff;
+  border: 2px solid #8c8c8c;
+  border-radius: 12px;
+  overflow: hidden;
+  height: auto;
+  min-height: 220px;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  border-color: #d41f38;
+  box-shadow: 0 12px 24px rgba(212, 31, 56, 0.08);
+}
+
+/* Left vertical accent bar */
+.accent-bar {
+  width: 8px;
+  height: 100%;
+  background: #d41f38;
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 0;
+}
+
+/* Main card contents */
+.card-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding: 1.5rem 1.5rem 1.5rem 2.25rem;
+  gap: 20px;
+}
+
+.icon-circle {
+  background: rgba(123, 188, 198, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.text-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 36px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  line-height: 1.25;
+  color: #323232;
+}
+
+.service-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  line-height: 1.45;
+  color: #5b5656;
+}
+
+/* Figma Tertiary button representation */
+.tertiary-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 20px;
+  height: 48px;
+  border: 2px solid #8c8c8c;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #211e0d;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.tertiary-btn:hover {
+  background: #211e0d;
+  color: #ffffff;
+  border-color: #211e0d;
+}
+
+/* Responsive breakpoint overrides */
+@media (max-width: 768px) {
+  .card-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5rem;
+  }
+
+  .accent-bar {
+    width: 100%;
+    height: 8px;
+    top: 0;
+    left: 0;
+  }
+
+  .card-content {
+    padding-top: 2rem;
+  }
+
+  .tertiary-btn {
+    align-self: stretch;
+    width: 100%;
+  }
+}
+
+/* Styling for no-button cards (used in Urgent Care & Primary Care pages) */
+.service-card.no-button {
+  border-radius: 8px;
+  min-height: 246px;
+  position: relative;
+  align-items: stretch;
+}
+
+.service-card.no-button .accent-bar {
+  width: 8px;
+  height: 100%;
+  background-color: #d41f38;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px 0 0 8px;
+  z-index: 2;
+}
+
+.service-card.no-button .card-content {
+  padding: 24px 24px 24px 32px; /* Extra left padding to clear the 8px absolute accent-bar */
+  gap: 20px;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+/* Remove circular background and center-align only the vector icon vertically */
+.service-card.no-button .icon-circle {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center; /* Vertically center ONLY the icon container */
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+.service-card.no-button .text-area {
+  gap: 12px;
+}
+
+.service-card.no-button .service-title {
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: #323232;
+  line-height: 1.2;
+}
+
+.service-card.no-button .service-desc {
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #5b5656;
+}
+
+@media (max-width: 768px) {
+  .service-card.no-button {
+    min-height: auto;
+  }
+
+  .service-card.no-button .card-content {
+    padding: 24px 16px 16px 24px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .service-card.no-button .accent-bar {
+    width: 8px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .service-card.no-button .icon-circle {
+    width: auto;
+    height: auto;
+    margin-top: 0; /* Reset top margin on mobile since layout is centered vertically */
+  }
+
+  .service-card.no-button .service-title {
+    font-size: 1.25rem;
+  }
+
+  .service-card.no-button .service-desc {
+    display: none !important;
+  }
+}

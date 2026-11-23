@@ -1,0 +1,16 @@
+<section class="hero-section" [style.background-image]="'url(' + backgroundImage() + ')'">
+  <div class="hero-gradient-overlay"></div>
+  <div class="hero-container">
+    <!-- Left Column: Hero Text Contents -->
+    <div class="hero-text-col">
+      <h1 class="hero-headline">{{ headline() }}</h1>
+      <p class="hero-bodytext">{{ bodytext() }}</p>
+
+      <!-- Slot for custom nested CTA buttons, badge panels, schedules etc. -->
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Right Column: Empty panel for layout grid and background image viewability -->
+    <div class="hero-panel-col"></div>
+  </div>
+</section>

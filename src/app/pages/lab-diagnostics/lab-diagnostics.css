@@ -1,0 +1,368 @@
+/* Lab & Diagnostics Page Styles */
+.lab-diagnostics-page {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Base Container */
+.container {
+  max-width: 1528px;
+  width: calc(100% - 64px);
+  margin: 0 auto;
+}
+
+/* 1. Hero Content Styles */
+
+.hero-actions {
+  margin-top: 8px;
+}
+
+/* 2. Comparison Section */
+.comparison-section {
+  padding: 80px 0;
+}
+
+.comparison-header {
+  text-align: left;
+  max-width: 1160px;
+  margin: 0 0 56px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.section-subtitle {
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 41px;
+  letter-spacing: 0.05em;
+  color: var(--accent-crimson, #d41f38);
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.section-title {
+  font-family: var(--font-heading); /* 'Fjalla One' style */
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 80px;
+  color: #211e0d; /* Matching Figma spec */
+  margin: 0 0 12px 0;
+  text-align: left;
+}
+
+.section-desc {
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 600;
+  font-size: 18px; /* Matching Figma spec */
+  line-height: 25px; /* Matching Figma spec */
+  color: var(--text-muted, #5b5656);
+  margin: 0;
+  text-align: left;
+}
+
+.comparison-grid {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.comparison-card {
+  flex: 1;
+  max-width: 536px;
+  height: 586px; /* Matching Figma spec */
+  display: flex;
+  flex-direction: column;
+  padding: 56px; /* Matching Figma spec */
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 3px 5px 7px rgba(119, 119, 119, 0.32); /* Matching Figma spec */
+}
+
+.typical-care-card {
+  border: 2px solid #8c8c8c; /* Matching Figma spec */
+}
+
+.local-md-card {
+  border: 2px solid var(--accent-crimson, #d41f38); /* Matching Figma spec */
+}
+
+.card-header-title {
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 600;
+  font-size: 36px; /* Matching Figma spec */
+  line-height: 49px; /* Matching Figma spec */
+  color: #151515;
+  margin: 0 0 28px 0;
+  height: 72px; /* Matching logo height space */
+  display: flex;
+  align-items: center;
+}
+
+.card-brand-header {
+  margin: 0 0 28px 0;
+  height: 72px; /* Matching Figma spec */
+  display: flex;
+  align-items: center;
+}
+
+.card-logo-img {
+  height: 72px; /* Matching Figma spec */
+  width: auto;
+  object-fit: contain;
+}
+
+.comparison-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comparison-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.comparison-item .icon-wrapper {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comparison-item .item-text {
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 600;
+  font-size: 24px; /* Matching Figma spec */
+  line-height: 33px; /* Matching Figma spec */
+  color: var(--text-muted, #5b5656);
+}
+
+/* 3. Testings Section */
+.testings-section {
+  padding: 80px 0;
+}
+
+.testings-header {
+  text-align: left;
+  max-width: 981px;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.testings-table {
+  display: flex;
+  flex-direction: column;
+  max-width: 981px;
+  width: 100%;
+  background: transparent;
+}
+
+.testing-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 2px solid #8c8c8c; /* Matching Figma spec */
+  padding: 16px 0;
+  gap: 34px;
+}
+
+.testing-row:last-child {
+  border-bottom: 2px solid #8c8c8c;
+}
+
+.testing-category {
+  width: 251px;
+  flex-shrink: 0;
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 600;
+  font-size: 30px; /* Matching Figma spec */
+  line-height: 41px; /* Matching Figma spec */
+  color: #323232;
+  display: flex;
+  align-items: center;
+}
+
+.testing-description {
+  flex: 1;
+  font-family: var(--font-body, 'Tirra', sans-serif);
+  font-weight: 600;
+  font-size: 24px; /* Matching Figma spec */
+  line-height: 33px; /* Matching Figma spec */
+  color: var(--text-muted, #5b5656);
+  display: flex;
+  align-items: center;
+}
+
+/* 4. Also On Site Section */
+.also-on-site-section {
+  padding: 80px 0 120px 0;
+}
+
+.also-header {
+  text-align: left;
+  max-width: 1068px;
+  margin-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.also-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  width: 100%;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .container {
+    width: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .section-title {
+    font-size: 48px;
+    line-height: 56px;
+  }
+
+  .section-subtitle {
+    font-size: 24px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .comparison-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .comparison-card {
+    width: 100%;
+    max-width: 600px;
+    height: auto; /* Dynamic height on smaller screens to allow wrap */
+    padding: 36px; /* Tightened padding */
+  }
+
+  .card-header-title {
+    font-size: 28px;
+    line-height: 36px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+
+  .card-brand-header {
+    height: auto;
+    margin-bottom: 20px;
+  }
+
+  .card-logo-img {
+    height: 56px;
+  }
+
+  .comparison-item .item-text {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .testing-category {
+    font-size: 22px;
+    line-height: 28px;
+    width: 180px;
+  }
+
+  .testing-description {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .also-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .comparison-section,
+  .testings-section,
+  .also-on-site-section {
+    padding: 48px 0;
+  }
+
+  .section-title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .section-subtitle {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .section-desc {
+    font-size: 15px;
+    line-height: 21px;
+  }
+
+  .comparison-card {
+    padding: 24px 20px;
+  }
+
+  .card-header-title {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
+  .comparison-item .item-text {
+    font-size: 15px;
+    line-height: 21px;
+  }
+
+  .testing-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 0;
+    gap: 8px;
+  }
+
+  .testing-category {
+    width: 100%;
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .testing-description {
+    font-size: 15px;
+    line-height: 20px;
+  }
+}

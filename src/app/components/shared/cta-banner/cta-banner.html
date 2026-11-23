@@ -1,0 +1,11 @@
+<section class="cta-banner-section">
+  <div class="cta-banner-container">
+    <div class="cta-banner-card">
+      <h2 class="cta-banner-title">{{ title() }}</h2>
+      <p class="cta-banner-desc">{{ description() }}</p>
+      <a [routerLink]="buttonLink()" class="cta-banner-btn">
+        {{ buttonText() }}
+      </a>
+    </div>
+  </div>
+</section>

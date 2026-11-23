@@ -1,0 +1,56 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Icon Wrapper - normalized standard dimensions */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* Flags specification wrapper */
+.flag-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+/* Base SVG styling for standard scalable vectors - critical for Safari/iOS WebKit rendering */
+:host svg,
+.icon-svg,
+svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Color presets matching Figma export categories */
+.color-dark {
+  color: #211e0d;
+}
+
+.color-black {
+  color: #000000;
+}
+
+.color-teal {
+  color: #7bbcc6;
+}
+
+/* Interactive helper class for hover effects */
+.icon-interactive:hover {
+  transform: scale(1.1);
+  filter: brightness(0.9);
+}

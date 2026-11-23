@@ -1,0 +1,51 @@
+@import '../privacy-policy/privacy-policy.css';
+
+.alert-box {
+  background-color: #fffbeb;
+  border-left: 4px solid #d97706;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.alert-box p {
+  color: #92400e !important;
+  margin-bottom: 0.5rem;
+}
+
+.alert-box p:last-child {
+  margin-bottom: 0;
+}
+
+.alert-box strong {
+  color: #78350f;
+}
+
+.hipaa-box {
+  background-color: #f0f9ff;
+  border-left: 4px solid #0284c7;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.hipaa-box p {
+  color: #075985 !important;
+  margin-bottom: 0.5rem;
+}
+
+.hipaa-box p:last-child {
+  margin-bottom: 0;
+}
+
+.hipaa-box strong {
+  color: #0c4a6e;
+}
+
+@media (max-width: 600px) {
+  .alert-box,
+  .hipaa-box {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+}

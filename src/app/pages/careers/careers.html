@@ -1,0 +1,66 @@
+<div class="careers-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="Build a career that brings care closer to home."
+    i18n-headline="@@careers.hero.headline"
+    bodytext="Grow your career with a team focused on accessible, compassionate care for the communities we serve."
+    i18n-bodytext="@@careers.hero.bodytext"
+    [backgroundImage]="'assets/careers_hero.webp'"
+  >
+    <div class="hero-actions">
+      <a
+        class="primary-btn hero-btn"
+        href="#open-positions"
+        (click)="scrollToIframe($event)"
+        i18n="@@careers.hero.cta"
+      >
+        VIEW OPEN POSITIONS
+      </a>
+    </div>
+  </app-hero>
+
+  <section id="open-positions" class="openings-section" aria-labelledby="openings-title">
+    <div class="openings-container">
+      <div class="openings-header">
+        <div class="openings-copy">
+          <span class="openings-eyebrow">OPEN POSITIONS</span>
+          <h2 id="openings-title" class="section-title">Find your next opportunity</h2>
+          <p id="careers-portal-description">
+            Browse current Local MD openings through our Paycom careers portal. Select a position to
+            review the details and begin your application.
+          </p>
+        </div>
+
+        <a
+          class="careers-portal-fallback"
+          href="https://www.paycomonline.net/v4/ats/web.php/portal/4FD65BE5F92B4AB0C0B170A90E8B45EA/career-page"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open careers portal in a new tab
+          <span aria-hidden="true">&#8599;</span>
+        </a>
+      </div>
+
+      <div class="careers-portal-shell">
+        <div class="careers-portal-heading">
+          <span class="careers-portal-heading__mark" aria-hidden="true"></span>
+          <div>
+            <p class="careers-portal-heading__title">Local MD opportunities</p>
+            <p class="careers-portal-heading__provider">Powered by Paycom</p>
+          </div>
+        </div>
+
+        <div class="careers-portal-frame">
+          <iframe
+            src="https://www.paycomonline.net/v4/ats/web.php/portal/4FD65BE5F92B4AB0C0B170A90E8B45EA/career-page"
+            title="Current job openings at Local MD"
+            aria-describedby="careers-portal-description"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

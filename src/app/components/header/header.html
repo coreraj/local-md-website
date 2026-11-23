@@ -1,0 +1,336 @@
+<header class="main-header">
+  <div class="header-container">
+    <!-- Brand Logo: Real image from assets -->
+    <a routerLink="/home" class="logo" (click)="closeMobileMenu()">
+      <img src="/assets/local_md_header_logo.webp" alt="Local MD Logo" class="header-logo-img" />
+    </a>
+
+    <!-- Desktop Navigation Menu (Fully Translatable) -->
+    <nav class="desktop-nav">
+      <a
+        routerLink="/urgent-care"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.urgentCare"
+        >Urgent Care</a
+      >
+      <a
+        routerLink="/primary-care"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.primaryCare"
+        >Primary Care</a
+      >
+      <a
+        routerLink="/occupational-health"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.occupationalHealth"
+        >Occupational Health</a
+      >
+      <a
+        routerLink="/weight-loss"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.weightLoss"
+        >Weight Loss / GLP-1 Therapy</a
+      >
+      <a
+        routerLink="/lab-diagnostics"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.labDiagnostics"
+        >Lab & Diagnostics</a
+      >
+      <a
+        routerLink="/injury-care"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.dme"
+        >Musculoskeletal / Injury</a
+      >
+      <a
+        routerLink="/locations"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.locations"
+        >Locations</a
+      >
+      <a
+        routerLink="/for-patients"
+        routerLinkActive="active"
+        class="nav-link"
+        i18n="@@header.nav.forPatients"
+        >For Patients</a
+      >
+      <a routerLink="/careers" routerLinkActive="active" class="nav-link">Careers</a>
+    </nav>
+
+    <!-- Header Actions Group (Desktop) -->
+    <div class="header-actions desktop-only-actions">
+      <!-- Test Results (Outline Round Button) -->
+      @if (isExternalLink(testResultsUrl)) {
+        <a
+          [href]="testResultsUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-test-results-outline"
+          i18n="@@header.cta.testResults"
+        >
+          Test Results
+        </a>
+      } @else {
+        <a
+          [routerLink]="testResultsUrl"
+          class="btn-test-results-outline"
+          i18n="@@header.cta.testResults"
+        >
+          Test Results
+        </a>
+      }
+
+      <!-- Save My Spot (Solid Teal-Blue Button) -->
+      @if (isExternalLink(saveMySpotUrl)) {
+        <a
+          [href]="saveMySpotUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-save-spot-solid"
+          i18n="@@header.cta.saveMySpot"
+        >
+          Save My Spot
+        </a>
+      } @else {
+        <a [routerLink]="saveMySpotUrl" class="btn-save-spot-solid" i18n="@@header.cta.saveMySpot">
+          Save My Spot
+        </a>
+      }
+
+      <!-- Pay My Bill (Dropdown with Text Message & Account Number Options) -->
+      <div class="pay-bill-dropdown">
+        <button
+          type="button"
+          class="btn-pay-bill-solid"
+          (click)="togglePayBillMenu($event)"
+          [attr.aria-expanded]="isPayBillMenuOpen()"
+          aria-haspopup="true"
+        >
+          Pay Bill
+          <app-icon name="down" [size]="10" color="#FFFFFF" class="pay-bill-caret"></app-icon>
+        </button>
+
+        @if (isPayBillMenuOpen()) {
+          <div class="pay-bill-menu">
+            <a
+              [href]="payBillUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="pay-bill-option"
+              (click)="closePayBillMenu()"
+            >
+              <div class="option-title">Pay Bill via Text Message</div>
+              <div class="option-subtitle">
+                Pay using the SMS payment link sent to your mobile phone
+              </div>
+            </a>
+            <div class="pay-bill-divider"></div>
+            <a
+              href="https://localmdurgentcare.webpay.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="pay-bill-option"
+              (click)="closePayBillMenu()"
+            >
+              <div class="option-title">Pay Bill via Account Number</div>
+              <div class="option-subtitle">
+                For landline & mail patients — pay online with your account #
+              </div>
+            </a>
+          </div>
+        }
+      </div>
+
+      <!-- Phone Number -->
+      <a href="tel:7089220911" class="btn-phone-outline">
+        <app-icon name="smartphone" [size]="16" color="#1d5174"></app-icon>
+        (708) 922-0911
+      </a>
+    </div>
+
+    <!-- Mobile Burger Toggle Button -->
+    <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle navigation menu">
+      @if (isMobileMenuOpen()) {
+        <app-icon name="x" [size]="32" color="#211E0D"></app-icon>
+      } @else {
+        <app-icon name="hamburger" [size]="32" color="#211E0D"></app-icon>
+      }
+    </button>
+  </div>
+
+  <!-- Mobile & Tablet Action Buttons Row (Uses same desktop button styles) -->
+  <div class="header-mobile-actions-row">
+    <a
+      [href]="testResultsUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-test-results-outline"
+    >
+      TEST RESULTS
+    </a>
+    <a [href]="saveMySpotUrl" target="_blank" rel="noopener noreferrer" class="btn-save-spot-solid">
+      SAVE MY SPOT
+    </a>
+    <div class="pay-bill-dropdown">
+      <button type="button" class="btn-pay-bill-solid" (click)="togglePayBillMenu($event)">
+        PAY MY BILL
+      </button>
+
+      @if (isPayBillMenuOpen()) {
+        <div class="pay-bill-menu">
+          <a
+            [href]="payBillUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="pay-bill-option"
+            (click)="closePayBillMenu()"
+          >
+            <div class="option-title">Pay Bill via Text Message</div>
+            <div class="option-subtitle">SMS payment link sent to your mobile phone</div>
+          </a>
+          <div class="pay-bill-divider"></div>
+          <a
+            href="https://localmdurgentcare.webpay.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="pay-bill-option"
+            (click)="closePayBillMenu()"
+          >
+            <div class="option-title">Pay Bill via Account Number</div>
+            <div class="option-subtitle">localmdurgentcare.webpay.md</div>
+          </a>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Mobile/Tablet Dropdown Navigation Menu -->
+  @if (isMobileMenuOpen()) {
+    <div class="mobile-menu">
+      <div class="mobile-menu-inner">
+        <!-- Phone Number -->
+        <a
+          href="tel:7089220911"
+          class="mobile-menu-item mobile-cta-phone"
+          (click)="closeMobileMenu()"
+        >
+          <app-icon name="smartphone" [size]="20" color="#1d5174"></app-icon>
+          <span class="mobile-menu-text">(708) 922-0911</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Urgent Care -->
+        <a
+          routerLink="/urgent-care"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.urgentCare">Urgent Care</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Primary Care -->
+        <a
+          routerLink="/primary-care"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.primaryCare">Primary Care</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Occupational Health -->
+        <a
+          routerLink="/occupational-health"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.occupationalHealth"
+            >Occupational Health</span
+          >
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Weight Loss -->
+        <a
+          routerLink="/weight-loss"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.weightLoss"
+            >Weight Loss / GLP-1 Therapy</span
+          >
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Lab & Diagnostics -->
+        <a
+          routerLink="/lab-diagnostics"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.labDiagnostics">Lab & Diagnostics</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Injury -->
+        <a
+          routerLink="/injury-care"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.dme">Musculoskeletal / Injury</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Locations -->
+        <a
+          routerLink="/locations"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.locations">Locations</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- For Patients -->
+        <a
+          routerLink="/for-patients"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text" i18n="@@header.nav.forPatients">For Patients</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+
+        <!-- Careers -->
+        <a
+          routerLink="/careers"
+          routerLinkActive="active"
+          class="mobile-menu-item"
+          (click)="closeMobileMenu()"
+        >
+          <span class="mobile-menu-text">Careers</span>
+        </a>
+        <div class="mobile-menu-line"></div>
+      </div>
+    </div>
+  }
+</header>

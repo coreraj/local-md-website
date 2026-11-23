@@ -1,0 +1,36 @@
+<div
+  class="lmd-cc"
+  [class.is-visible]="isVisible()"
+  role="dialog"
+  aria-live="polite"
+  aria-label="Cookie consent"
+>
+  <div class="lmd-cc__inner">
+    <p class="lmd-cc__text">
+      <span i18n="@@cookie.consent.text1"
+        ><strong>We use cookies</strong> to make our website work, understand how it’s used, and
+        improve your experience. You can accept or decline non-essential cookies. See our </span
+      ><a routerLink="/privacy-policy" (click)="isVisible.set(false)" i18n="@@cookie.consent.link"
+        >Privacy Policy</a
+      ><span i18n="@@cookie.consent.text2"> for details.</span>
+    </p>
+    <div class="lmd-cc__actions">
+      <button
+        type="button"
+        class="lmd-cc__btn lmd-cc__btn--decline"
+        (click)="declineConsent()"
+        i18n="@@cookie.consent.decline"
+      >
+        Decline
+      </button>
+      <button
+        type="button"
+        class="lmd-cc__btn lmd-cc__btn--accept"
+        (click)="acceptConsent()"
+        i18n="@@cookie.consent.accept"
+      >
+        Accept
+      </button>
+    </div>
+  </div>
+</div>

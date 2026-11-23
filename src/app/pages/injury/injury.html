@@ -1,0 +1,105 @@
+<div class="dme-page">
+  <!-- 1. Hero Section -->
+  <app-hero
+    headline="The equipment you need, before you leave."
+    i18n-headline="@@dme.headline"
+    bodytext="Skip the separate trip to a supplier. When your provider recommends a brace, support, or other durable medical equipment, we fit and dispense it on the spot."
+    i18n-bodytext="@@dme.subhead"
+    [backgroundImage]="'assets/dme_hero.webp'"
+  >
+    <div class="hero-actions">
+      <a routerLink="/locations" class="primary-btn hero-btn" i18n="@@footer.contact.findLocation">
+        FIND A LOCATION
+      </a>
+    </div>
+  </app-hero>
+
+  <!-- 2. Services Grid ("What We Dispense") -->
+  <section class="services-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle" i18n="@@dme.services.subtitle">DME</span>
+        <h2 class="section-title" i18n="@@dme.services.headline">What we dispense</h2>
+        <p class="section-desc" i18n="@@dme.body">
+          Getting hurt is inconvenient enough without a second errand to track down a brace or a
+          pair of crutches. At Local MD, the durable medical equipment your provider recommends is
+          fitted and dispensed during your visit — so you leave ready to start healing, with
+          eligible items billed to your insurance.
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <!-- Card 1: Braces & Supports -->
+        <app-service-card
+          icon="injury"
+          title="Braces & Supports"
+          description="Knee, ankle, wrist, and back braces fitted to you during your visit."
+          [showButton]="false"
+          i18n-title="@@dme.service.braces.title"
+          i18n-description="@@dme.service.braces.desc"
+        ></app-service-card>
+
+        <!-- Card 2: Mobility Aids -->
+        <app-service-card
+          icon="mobility-aids"
+          title="Mobility Aids"
+          description="Crutches, walking boots, and slings to keep you moving safely."
+          [showButton]="false"
+          i18n-title="@@dme.service.mobility.title"
+          i18n-description="@@dme.service.mobility.desc"
+        ></app-service-card>
+
+        <!-- Card 3: Wound & Splint Supplies -->
+        <app-service-card
+          icon="supplies"
+          title="Wound & Splint Supplies"
+          description="Splints, wraps, and dressing supplies for proper at-home recovery."
+          [showButton]="false"
+          i18n-title="@@dme.service.wound.title"
+          i18n-description="@@dme.service.wound.desc"
+        ></app-service-card>
+
+        <!-- Card 4: Custom Fitting -->
+        <app-service-card
+          icon="custom"
+          title="Custom Fitting"
+          description="Our staff fits each item correctly and shows you how to use it."
+          [showButton]="false"
+          i18n-title="@@dme.service.fitting.title"
+          i18n-description="@@dme.service.fitting.desc"
+        ></app-service-card>
+
+        <!-- Card 5: Insurance Handled -->
+        <app-service-card
+          icon="insurance"
+          title="Insurance Handled"
+          description="We bill eligible DME to your insurance so there are no surprises."
+          [showButton]="false"
+          i18n-title="@@dme.service.insurance.title"
+          i18n-description="@@dme.service.insurance.desc"
+        ></app-service-card>
+
+        <!-- Card 6: No Second Stop -->
+        <app-service-card
+          icon="fast"
+          title="No Second Stop"
+          description="Everything dispensed in one visit — no waiting on an outside supplier."
+          [showButton]="false"
+          i18n-title="@@dme.service.stop.title"
+          i18n-description="@@dme.service.stop.desc"
+        ></app-service-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Bottom Gradient Banner ("One Visit") -->
+  <app-cta-banner
+    title="One visit. Everything you need."
+    i18n-title="@@ctaBanner.oneVisit.title"
+    description="Treatment, testing, and the equipment to recover — all under one roof."
+    i18n-description="@@ctaBanner.oneVisit.desc"
+    buttonText="SAVE MY SPOT"
+    i18n-buttonText="@@header.cta.saveMySpot"
+    buttonLink="/locations"
+  ></app-cta-banner>
+</div>

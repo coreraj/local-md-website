@@ -1,0 +1,21 @@
+<div class="service-card" [class.no-button]="!showButton()">
+  <!-- Brand Accent vertical line on the left side of the card -->
+  <div class="accent-bar"></div>
+
+  <div class="card-content">
+    <div class="icon-circle">
+      <app-icon [name]="icon()" [size]="48" color="#7BBCC6" [interactive]="true"></app-icon>
+    </div>
+
+    <div class="text-area">
+      <h3 class="service-title">{{ title() }}</h3>
+      <p class="service-desc">{{ description() }}</p>
+    </div>
+
+    @if (showButton()) {
+      <button class="tertiary-btn" [routerLink]="buttonLink()">
+        {{ buttonText() }}
+      </button>
+    }
+  </div>
+</div>

@@ -1,0 +1,147 @@
+<footer class="site-footer">
+  <div class="footer-container">
+    <!-- Brand & Bio Section (Left Column) -->
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <a routerLink="/home">
+          <img
+            src="/assets/local_md_gooter_logo.webp"
+            alt="Local MD Footer Logo"
+            class="footer-logo-img"
+          />
+        </a>
+      </div>
+
+      <p class="brand-bio" i18n="@@footer.tagline">
+        Walk-in urgent care, primary care, occupational health, and DME — with our own
+        state-of-the-art in-house laboratory, so you're seen faster and treated right.
+      </p>
+
+      <!-- Social Media Icons -->
+      <div class="social-links">
+        @for (social of socials; track social.name) {
+          <a
+            [href]="social.link"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.aria-label]="social.label"
+            class="social-icon"
+          >
+            <app-icon [name]="social.name" [size]="18" color="#FFFFFF"></app-icon>
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Links Grid (3 Columns) -->
+    <div class="footer-grid">
+      <!-- 1. CARE Column -->
+      <div class="footer-column">
+        <h4 class="column-title" i18n="@@footer.cols.care">Care</h4>
+        <ul class="column-links">
+          <li>
+            <a routerLink="/urgent-care" i18n="@@header.nav.urgentCare">Urgent Care</a>
+          </li>
+          <li>
+            <a routerLink="/primary-care" i18n="@@header.nav.primaryCare">Primary Care</a>
+          </li>
+          <li>
+            <a routerLink="/occupational-health" i18n="@@header.nav.occupationalHealth"
+              >Occupational Health</a
+            >
+          </li>
+          <li>
+            <a routerLink="/weight-loss" i18n="@@header.nav.weightLoss"
+              >Weight Loss / GLP-1 Therapy</a
+            >
+          </li>
+          <li>
+            <a routerLink="/lab-diagnostics" i18n="@@header.nav.labDiagnostics"
+              >Lab & Diagnostics</a
+            >
+          </li>
+          <li>
+            <a routerLink="/injury-care" i18n="@@header.nav.dme">Musculoskeletal / Injury</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 2. PATIENTS Column -->
+      <div class="footer-column">
+        <h4 class="column-title" i18n="@@footer.cols.patients">Patients</h4>
+        <ul class="column-links">
+          <li>
+            <a routerLink="/for-patients" i18n="@@footer.links.acceptedInsurance"
+              >Accepted Insurance</a
+            >
+          </li>
+          <li>
+            <a routerLink="/for-patients" i18n="@@footer.links.selfPayPricing">Self-Pay Pricing</a>
+          </li>
+          <li>
+            @if (isExternalLink(testResultsUrl)) {
+              <a
+                [href]="testResultsUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                i18n="@@header.cta.testResults"
+                >Test Results</a
+              >
+            } @else {
+              <a [routerLink]="testResultsUrl" i18n="@@header.cta.testResults">Test Results</a>
+            }
+          </li>
+          <li>
+            @if (isExternalLink(payBillUrl)) {
+              <a
+                [href]="payBillUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                i18n="@@footer.links.payYourBill"
+                >Pay Your Bill</a
+              >
+            } @else {
+              <a [routerLink]="payBillUrl" i18n="@@footer.links.payYourBill">Pay Your Bill</a>
+            }
+          </li>
+          <li>
+            <a routerLink="/for-patients" fragment="faqs" i18n="@@footer.links.faqs">FAQs</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 3. CONTACT Column -->
+      <div class="footer-column">
+        <h4 class="column-title" i18n="@@footer.cols.contact">Contact</h4>
+        <ul class="column-links">
+          <li><a href="tel:7089220911" class="link-item highlight-phone">708-922-0911</a></li>
+          <li><a href="mailto:info@local-md.com" class="link-item">info@local-md.com</a></li>
+          <li>
+            <a routerLink="/locations" i18n="@@footer.cols.findLocation">Find a Location</a>
+          </li>
+          <li><a routerLink="/careers">Careers</a></li>
+          <li>
+            <a routerLink="/for-patients" fragment="faqs" i18n="@@footer.links.faqs">FAQs</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Legal Metadata Bar -->
+  <div class="footer-bottom">
+    <div class="bottom-container">
+      <p class="copyright" i18n="@@footer.legal">
+        © 2026 Local MD Urgent Care • Illinois Urgent Care Professionals PLLC
+      </p>
+      <div class="bottom-links">
+        <a routerLink="/privacy-policy" i18n="@@footer.legal.privacy">Privacy Policy</a>
+        <a routerLink="/terms-of-use" i18n="@@footer.legal.terms">Terms of Use</a>
+        <a routerLink="/accessibility" i18n="@@footer.legal.accessibility">Accessibility</a>
+        <a routerLink="/hipaa-notice" i18n="@@footer.legal.hipaa"
+          >Notice of Privacy Practices (HIPAA)</a
+        >
+      </div>
+    </div>
+  </div>
+</footer>
