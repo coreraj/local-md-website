@@ -4,7 +4,22 @@
     <!-- Left Column: Hero Text Contents -->
     <div class="hero-text-col">
       <h1 class="hero-headline">{{ headline() }}</h1>
-      <p class="hero-bodytext">{{ bodytext() }}</p>
+      <p class="hero-bodytext" [class.has-mobile-summary]="mobileBodytext()">
+        {{ bodytext() }}
+      </p>
+
+      @if (mobileBodytext(); as mobileSummary) {
+        <details class="hero-mobile-description">
+          <summary>
+            <span>{{ mobileSummary }}</span>
+            <span class="description-toggle read-more-label">Read more</span>
+            <span class="description-toggle read-less-label">Read less</span>
+          </summary>
+          @if (mobileBodytextMore(); as mobileDetails) {
+            <p>{{ mobileDetails }}</p>
+          }
+        </details>
+      }
 
       <!-- Slot for custom nested CTA buttons, badge panels, schedules etc. -->
       <ng-content></ng-content>

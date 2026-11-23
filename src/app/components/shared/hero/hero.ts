@@ -10,5 +10,7 @@ import { Component, input } from '@angular/core';
 export class HeroComponent {
   headline = input.required<string>();
   bodytext = input.required<string>();
+  mobileBodytext = input<string>();
+  mobileBodytextMore = input<string>();
   backgroundImage = input.required<string>();
 }
