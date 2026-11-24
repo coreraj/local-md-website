@@ -45,6 +45,8 @@ const MAP_TILE_CONFIG = {
   maxZoom: 19,
 } as const;
 
+const MAP_OVERVIEW_ZOOM_OFFSET = 2;
+
 export function calculateDistanceMiles(
   lat1: number,
   lon1: number,
@@ -2203,7 +2205,8 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
     const bounds = this.leafletModule.latLngBounds(
       clinics.map((clinic) => [clinic.lat, clinic.lng] as [number, number]),
     );
-    this.leafletMap.fitBounds(bounds, { padding: [32, 32], maxZoom: 10 });
+    this.leafletMap.fitBounds(bounds, { padding: [32, 32], maxZoom: 10, animate: false });
+    this.leafletMap.zoomOut(MAP_OVERVIEW_ZOOM_OFFSET, { animate: false });
   }
 
   private isMapVisible(): boolean {

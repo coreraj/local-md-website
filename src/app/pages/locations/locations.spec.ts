@@ -7,6 +7,7 @@ import { calculateDistanceMiles, LocationsComponent } from './locations';
 const leafletMocks = vi.hoisted(() => {
   const mapInstance = {
     fitBounds: vi.fn(),
+    zoomOut: vi.fn(),
     invalidateSize: vi.fn(),
     setView: vi.fn(),
     closePopup: vi.fn(),
@@ -133,6 +134,7 @@ describe('LocationsComponent', () => {
     leafletMocks.map.mockClear();
     leafletMocks.map.mockImplementation(() => leafletMocks.mapInstance);
     leafletMocks.mapInstance.fitBounds.mockClear();
+    leafletMocks.mapInstance.zoomOut.mockClear();
     leafletMocks.mapInstance.invalidateSize.mockClear();
     leafletMocks.mapInstance.setView.mockClear();
     leafletMocks.mapInstance.closePopup.mockClear();
@@ -159,6 +161,13 @@ describe('LocationsComponent', () => {
       expect(link?.rel).toContain('noopener');
       expect(link?.rel).toContain('noreferrer');
     }
+  });
+
+  it('shows the clinic overview two zoom levels wider after fitting marker bounds', async () => {
+    await createComponent();
+
+    expect(leafletMocks.mapInstance.fitBounds).toHaveBeenCalled();
+    expect(leafletMocks.mapInstance.zoomOut).toHaveBeenLastCalledWith(2, { animate: false });
   });
 
   it('filters seven Illinois and three Indiana clinics with matching markers', async () => {
