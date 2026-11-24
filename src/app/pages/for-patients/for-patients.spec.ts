@@ -23,7 +23,7 @@ describe('Patient resources navigation', () => {
     const links = harness.routeNativeElement?.querySelectorAll<HTMLAnchorElement>('.shortcut-card');
     expect(links?.[0].getAttribute('href')).toBe(environment.links.testResults);
     expect(links?.[1].getAttribute('href')).toBe(environment.links.payBill);
-    expect(links?.[2].getAttribute('href')).toBe('/locations');
+    expect(links?.[2].getAttribute('href')).toBe('/locations?intent=nearest');
   });
 
   it('positions a FAQ deep link after both deferred sections have rendered', async () => {

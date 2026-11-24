@@ -10,13 +10,15 @@ import {
   OnInit,
   AfterViewInit,
   OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import type * as Leaflet from 'leaflet';
 import { IconComponent } from '../../components/icon/icon';
 import { SeoService } from '../../services/seo.service';
 import { HeroComponent } from '../../components/shared/hero/hero';
-import { environment } from '../../../environments/environment';
 
 interface ClinicLocation {
   id: string;
@@ -34,30 +36,40 @@ interface ClinicLocation {
   reserveUrl?: string; // clockwise booking URL
 }
 
-interface GoogleMapInstance {
-  setCenter(latLng: { lat: number; lng: number } | null): void;
-  setZoom(zoom: number): void;
-}
+type GeolocationIntent = 'sort' | 'booking';
 
-interface GoogleMapsWindow extends Window {
-  google?: {
-    maps?: {
-      Map?: new (el: HTMLElement, options: Record<string, unknown>) => GoogleMapInstance;
-      InfoWindow?: new (options: Record<string, unknown>) => {
-        close(): void;
-        open(map: unknown, marker: unknown): void;
-      };
-      importLibrary?: (library: string) => Promise<Record<string, unknown>>;
-    };
-  };
-  initGoogleMapStatic?: () => void;
-}
+const MAP_TILE_CONFIG = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+  maxZoom: 19,
+} as const;
 
-interface MapMarker {
-  clinicId: string;
-  marker: {
-    map: unknown;
-  };
+export function calculateDistanceMiles(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number | null {
+  const coordinates = [lat1, lon1, lat2, lon2];
+  if (
+    coordinates.some((coordinate) => !Number.isFinite(coordinate)) ||
+    Math.abs(lat1) > 90 ||
+    Math.abs(lat2) > 90 ||
+    Math.abs(lon1) > 180 ||
+    Math.abs(lon2) > 180
+  ) {
+    return null;
+  }
+
+  const toRadians = (degrees: number) => degrees * (Math.PI / 180);
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const haversine =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
+  const clamped = Math.min(1, Math.max(0, haversine));
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(clamped), Math.sqrt(1 - clamped));
 }
 
 @Component({
@@ -119,6 +131,8 @@ interface MapMarker {
             <button
               class="geo-sort-btn"
               (click)="requestUserLocation()"
+              [disabled]="isGeoLoading()"
+              [attr.aria-busy]="isGeoLoading()"
               [class.has-location]="userLocation() !== null"
               [class.loading]="isGeoLoading()"
             >
@@ -137,6 +151,64 @@ interface MapMarker {
           </div>
         </div>
 
+        @if (bookingIntentActive()) {
+          <section class="nearest-booking-panel" aria-live="polite" aria-labelledby="nearest-title">
+            @if (isGeoLoading()) {
+              <div class="booking-status" role="status">
+                <span class="geo-spinner" aria-hidden="true"></span>
+                <div>
+                  <h2 id="nearest-title" i18n="@@locations.findingNearestTitle">
+                    Finding your nearest clinic…
+                  </h2>
+                  <p i18n="@@locations.findingNearestText">
+                    Your location stays in this browser and is used only for this comparison.
+                  </p>
+                </div>
+              </div>
+            } @else if (getSelectedClinic(); as selectedClinic) {
+              <div class="booking-confirmation">
+                <div>
+                  <span class="booking-eyebrow" i18n="@@locations.preferredClinicLabel"
+                    >PREFERRED CLINIC</span
+                  >
+                  <h2 id="nearest-title">{{ selectedClinic.name }}</h2>
+                  <p>{{ selectedClinic.address }}</p>
+                  @if (getSelectedClinicDistance() !== undefined) {
+                    <p class="approximate-distance">
+                      {{ getSelectedClinicDistance() | number: '1.2-2' }}
+                      <span i18n="@@locations.approximateDistance"
+                        >miles away (approximate straight-line distance)</span
+                      >
+                    </p>
+                  }
+                  <p class="selection-help" i18n="@@locations.chooseDifferentClinic">
+                    Prefer another clinic? Select any clinic card or map marker before continuing.
+                  </p>
+                </div>
+                @if (getValidReserveUrl(selectedClinic); as bookingUrl) {
+                  <a
+                    [href]="bookingUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="confirm-booking-btn"
+                    i18n="@@locations.confirmClinicButton"
+                    >CONFIRM CLINIC &amp; CONTINUE</a
+                  >
+                }
+              </div>
+            } @else {
+              <div class="booking-manual" role="status">
+                <h2 id="nearest-title" i18n="@@locations.chooseClinicManually">
+                  Choose a clinic to continue
+                </h2>
+                <p i18n="@@locations.manualClinicSelection">
+                  We could not determine your location. Select any clinic below to keep booking.
+                </p>
+              </div>
+            }
+          </section>
+        }
+
         <!-- Layout for Tablet/Mobile: 2 Steps (List or Map) -->
         @if (isMobileTablet()) {
           <div class="view-switch-banner">
@@ -146,7 +218,7 @@ interface MapMarker {
                 <p i18n="@@locations.seeAllLocationsText">View all clinic locations on the map</p>
                 <button
                   class="primary-btn switch-view-btn"
-                  (click)="activeStep.set('map')"
+                  (click)="showMapView()"
                   i18n="@@locations.switchToMapButton"
                 >
                   SWITCH TO MAP
@@ -216,9 +288,12 @@ interface MapMarker {
                           >GET DIRECTIONS</a
                         >
                         <a
-                          [href]="clinic.reserveUrl || '#'"
+                          [href]="getValidReserveUrl(clinic)"
                           target="_blank"
+                          rel="noopener noreferrer"
                           class="spot-btn"
+                          [class.disabled-link]="!getValidReserveUrl(clinic)"
+                          [attr.aria-disabled]="!getValidReserveUrl(clinic)"
                           (click)="$event.stopPropagation()"
                           (keydown)="$event.stopPropagation()"
                           i18n="@@locations.saveMySpot"
@@ -280,22 +355,46 @@ interface MapMarker {
             </div>
           </div>
 
-          <!-- Column B: Google Map Container -->
+          <!-- Column B: Leaflet / OpenStreetMap Container -->
           <div
             class="clinic-map-column"
             [class.show-mobile]="activeStep() === 'map' && isMobileTablet()"
           >
             <div #mapViewport class="map-inner-wrapper">
-              <!-- Real Google Map Viewport -->
               <div
                 #mapContainer
-                class="real-google-map-viewport"
-                [class.hidden]="useFallbackMap()"
+                class="leaflet-map-viewport"
+                [class.hidden]="mapStatus() !== 'ready'"
+                aria-label="Map of Local MD clinic locations"
               ></div>
 
-              <!-- High-Fidelity Gorgeous Simulated SVG Fallback Map -->
+              @if (mapStatus() === 'idle' || mapStatus() === 'loading') {
+                <div class="map-status-overlay" role="status" aria-live="polite">
+                  <span class="geo-spinner" aria-hidden="true"></span>
+                  <p i18n="@@locations.mapLoading">Loading clinic map…</p>
+                </div>
+              }
+
+              @if (tileError() && mapStatus() === 'ready') {
+                <div class="tile-warning" role="status">
+                  Map tiles are temporarily unavailable. Clinic booking remains available below.
+                </div>
+              }
+
+              <!-- Schematic fallback shown only if the interactive map cannot load. -->
               @if (useFallbackMap()) {
                 <div class="simulated-map-viewport">
+                  <div class="map-fallback-message" role="alert">
+                    <strong i18n="@@locations.mapUnavailable">Interactive map unavailable</strong>
+                    <span>{{ mapError() }}</span>
+                    <span i18n="@@locations.schematicMapLabel"
+                      >The diagram below is a schematic, not a geographical map. Clinic cards and
+                      booking links remain available.</span
+                    >
+                    <button type="button" class="retry-map-btn" (click)="retryMap()">
+                      TRY MAP AGAIN
+                    </button>
+                  </div>
                   <div class="simulated-svg-overlay">
                     <svg viewBox="0 0 800 600" width="100%" height="100%" class="state-outline-svg">
                       <!-- Clean minimal map boundaries of IL & IN region -->
@@ -388,7 +487,7 @@ interface MapMarker {
                         <h4 class="card-title">{{ clinic.name }}</h4>
                         <p class="clinic-address">{{ clinic.address }}</p>
                         <a
-                          [href]="clinic.reserveUrl"
+                          [href]="getValidReserveUrl(clinic)"
                           target="_blank"
                           rel="noopener noreferrer"
                           class="spot-btn"
@@ -523,6 +622,78 @@ interface MapMarker {
         display: flex;
         flex-direction: column;
         gap: 32px;
+      }
+
+      .nearest-booking-panel {
+        padding: 24px 28px;
+        border: 2px solid #365873;
+        border-radius: 18px;
+        background: #f5f8fa;
+        color: #211e0d;
+        box-shadow: 0 8px 28px rgba(54, 88, 115, 0.1);
+      }
+
+      .booking-status,
+      .booking-confirmation {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 28px;
+      }
+
+      .booking-status {
+        justify-content: flex-start;
+      }
+
+      .nearest-booking-panel h2 {
+        margin: 3px 0 5px;
+        font-family: var(--font-heading);
+        font-size: clamp(1.5rem, 3vw, 2rem);
+      }
+
+      .nearest-booking-panel p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .booking-eyebrow {
+        color: #d41f38;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .approximate-distance {
+        margin-top: 8px !important;
+        color: #365873;
+        font-weight: 700;
+      }
+
+      .selection-help {
+        margin-top: 10px !important;
+        color: #5b5656;
+        font-size: 14px;
+      }
+
+      .confirm-booking-btn {
+        flex: 0 0 auto;
+        padding: 14px 20px;
+        border-radius: 10px;
+        background: #365873;
+        color: #ffffff;
+        font-weight: 800;
+        text-decoration: none;
+        text-align: center;
+      }
+
+      .confirm-booking-btn:hover,
+      .confirm-booking-btn:focus-visible {
+        background: #29465c;
+      }
+
+      .disabled-link {
+        pointer-events: none;
+        opacity: 0.55;
       }
 
       .controls-header {
@@ -962,13 +1133,70 @@ interface MapMarker {
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
       }
 
-      .real-google-map-viewport {
+      .leaflet-map-viewport {
         width: 100%;
         height: 100%;
+        min-height: 500px;
       }
 
-      .real-google-map-viewport.hidden {
+      .leaflet-map-viewport.hidden {
         display: none;
+      }
+
+      .map-status-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        color: #365873;
+        font-weight: 700;
+      }
+
+      .tile-warning {
+        position: absolute;
+        z-index: 700;
+        left: 16px;
+        right: 16px;
+        bottom: 28px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        color: #211e0d;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .map-fallback-message {
+        position: absolute;
+        z-index: 30;
+        top: 18px;
+        left: 18px;
+        right: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #211e0d;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+        font-size: 14px;
+      }
+
+      .retry-map-btn {
+        align-self: flex-start;
+        margin-top: 4px;
+        padding: 9px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #365873;
+        color: #ffffff;
+        font-weight: 700;
+        cursor: pointer;
       }
 
       /* 4. Fallback Simulated SVG Map styles */
@@ -1162,6 +1390,15 @@ interface MapMarker {
       }
 
       @media (max-width: 768px) {
+        .booking-confirmation,
+        .booking-status {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .confirm-booking-btn {
+          width: 100%;
+        }
         .hero-contact {
           flex-direction: column;
           align-items: flex-start;
@@ -1308,12 +1545,24 @@ interface MapMarker {
 export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  // Element handle for the real Google Maps container
   private readonly mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
   private readonly mapViewport = viewChild<ElementRef<HTMLDivElement>>('mapViewport');
   private mapVisibilityObserver?: IntersectionObserver;
-  private googleMapsLoadStarted = false;
+  private mapResizeObserver?: ResizeObserver;
+  private leafletModule: typeof import('leaflet') | null = null;
+  private leafletMap: Leaflet.Map | null = null;
+  private markerLayer: Leaflet.LayerGroup | null = null;
+  private readonly mapMarkers = new Map<string, Leaflet.Marker>();
+  private mapLoadStarted = false;
+  private destroyed = false;
+  private mapOperationId = 0;
+  private geolocationOperationId = 0;
+  private locationPermissionDenied = false;
+  private bookingIntentConsumed = false;
+  private readonly pendingTimers = new Set<ReturnType<typeof setTimeout>>();
   private readonly resizeListener = () => this.checkViewport();
 
   // Keep shared clinic details in sync with src/app/pages/home/home.ts when editing this list.
@@ -1480,12 +1729,13 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly selectedClinicId = signal<string>('');
   protected readonly activeStep = signal<'list' | 'map'>('list');
   protected readonly isMobileTablet = signal<boolean>(false);
-  protected readonly useFallbackMap = signal<boolean>(true); // defaults to true unless Google API loads successfully
-
-  private googleMap: GoogleMapInstance | null = null;
-  private mapMarkers: MapMarker[] = [];
-  private activeInfoWindow: { close(): void; open(map: unknown, marker: unknown): void } | null =
-    null;
+  protected readonly useFallbackMap = signal<boolean>(false);
+  protected readonly mapStatus = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  protected readonly mapError = signal<string>(
+    'The interactive map could not be loaded. Please use the clinic list.',
+  );
+  protected readonly tileError = signal<boolean>(false);
+  protected readonly bookingIntentActive = signal<boolean>(false);
 
   // Compute filtered clinics based on current state & tab selection, sorted by distance if user location is available
   protected readonly filteredClinics = computed<ClinicLocation[]>(() => {
@@ -1503,12 +1753,15 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
     const userLoc = this.userLocation();
     if (userLoc) {
       clinics = clinics.map((clinic) => {
-        const dist = this.calculateDistance(userLoc.lat, userLoc.lng, clinic.lat, clinic.lng);
-        return { ...clinic, distance: dist };
+        const distance = calculateDistanceMiles(userLoc.lat, userLoc.lng, clinic.lat, clinic.lng);
+        return { ...clinic, distance: distance ?? undefined };
       });
 
       // Sort by proximity
-      clinics.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      clinics.sort(
+        (a, b) =>
+          (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY),
+      );
     } else {
       clinics = clinics.map((c) => ({ ...c, distance: undefined }));
     }
@@ -1525,12 +1778,10 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
       path: '/locations',
     });
 
-    // Setup reactive side-effects to auto-update real Google Map markers if visible
     effect(() => {
       const clinics = this.filteredClinics();
-      const fallback = this.useFallbackMap();
-      if (!fallback && isPlatformBrowser(this.platformId)) {
-        this.updateGoogleMapMarkers(clinics);
+      if (isPlatformBrowser(this.platformId) && this.leafletMap) {
+        this.updateLeafletMarkers(clinics);
       }
     });
 
@@ -1542,42 +1793,38 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      // Check if a specific clinic needs to be selected/focused via query parameters
-      this.route.queryParams.subscribe((params) => {
-        const selectId = params['select'];
-        if (selectId) {
-          const targetClinic = this.rawClinics().find((c) => c.id === selectId);
-          if (targetClinic) {
-            // Adjust active tab state depending on target clinic's state
-            if (targetClinic.state === 'Illinois') {
-              this.activeTab.set('illinois');
-            } else if (targetClinic.state === 'Indiana') {
-              this.activeTab.set('indiana');
-            }
+    if (!isPlatformBrowser(this.platformId)) return;
 
-            // Mark as selected & expanded
-            this.selectClinic(targetClinic);
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const selectId = typeof params['select'] === 'string' ? params['select'] : '';
+      const targetClinic = this.rawClinics().find((clinic) => clinic.id === selectId);
 
-            // Smooth scroll to the target clinic card
-            setTimeout(() => {
-              const el = document.getElementById(`clinic-card-${targetClinic.id}`);
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }, 350);
-          }
-        }
-      });
-    }
+      if (targetClinic) {
+        this.activeTab.set(targetClinic.state === 'Illinois' ? 'illinois' : 'indiana');
+        this.selectClinic(targetClinic);
+        this.schedule(() => this.scrollClinicIntoView(targetClinic.id, 'center'), 350);
+        if (params['intent'] === 'nearest') this.consumeBookingIntent();
+        return;
+      }
+
+      if (params['intent'] === 'nearest' && !this.bookingIntentConsumed) {
+        this.bookingIntentConsumed = true;
+        this.bookingIntentActive.set(true);
+        this.activeTab.set('all');
+        this.requestUserLocation('booking');
+        this.consumeBookingIntent();
+      } else if (params['intent'] !== 'nearest') {
+        this.bookingIntentConsumed = false;
+      }
+    });
   }
 
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
     const viewport = this.mapViewport()?.nativeElement;
-    if (!viewport || !('IntersectionObserver' in window)) {
-      this.loadGoogleMapsApi();
+    if (!viewport || typeof IntersectionObserver !== 'function') {
+      void this.loadLeafletMap();
       return;
     }
 
@@ -1586,59 +1833,141 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
         if (entries.some((entry) => entry.isIntersecting)) {
           this.mapVisibilityObserver?.disconnect();
           this.mapVisibilityObserver = undefined;
-          this.loadGoogleMapsApi();
+          void this.loadLeafletMap();
         }
       },
       { rootMargin: '300px 0px' },
     );
     this.mapVisibilityObserver.observe(viewport);
+
+    if (typeof ResizeObserver === 'function') {
+      this.mapResizeObserver = new ResizeObserver(() => {
+        if (this.leafletMap && this.isMapVisible()) this.leafletMap.invalidateSize(false);
+      });
+      this.mapResizeObserver.observe(viewport);
+    }
   }
 
   ngOnDestroy(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
+    this.destroyed = true;
+    this.mapOperationId += 1;
+    this.geolocationOperationId += 1;
     this.mapVisibilityObserver?.disconnect();
-    window.removeEventListener('resize', this.resizeListener);
-    (window as unknown as GoogleMapsWindow).initGoogleMapStatic = () => undefined;
+    this.mapResizeObserver?.disconnect();
+    this.pendingTimers.forEach((timer) => clearTimeout(timer));
+    this.pendingTimers.clear();
+    this.markerLayer?.clearLayers();
+    this.mapMarkers.clear();
+    this.leafletMap?.remove();
+    this.leafletMap = null;
+    this.markerLayer = null;
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
   }
 
-  // Geolocation request handler
-  protected requestUserLocation(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  protected requestUserLocation(intent: GeolocationIntent = 'sort'): void {
+    if (!isPlatformBrowser(this.platformId) || this.isGeoLoading() || this.destroyed) return;
 
-    if (navigator.geolocation) {
-      this.isGeoLoading.set(true);
-      this.geoError.set(null);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.userLocation.set({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          this.isGeoLoading.set(false);
-
-          // Re-center Google Map around user location if available
-          if (this.googleMap) {
-            this.googleMap.setCenter(this.userLocation());
-            this.googleMap.setZoom(9);
-          }
-        },
-        (error) => {
-          console.warn('Geolocation access denied or timed out:', error);
-          this.isGeoLoading.set(false);
-          this.userLocation.set(null);
-          this.geoError.set('Location access is required to sort clinics by proximity.');
-
-          // Auto-dismiss notification toast after 5 seconds
-          setTimeout(() => {
-            this.geoError.set(null);
-          }, 5000);
-        },
-        { enableHighAccuracy: true, timeout: 5000 },
+    if (this.locationPermissionDenied) {
+      this.handleGeolocationFailure(
+        'Location permission was previously denied. Select a clinic manually or enable location access in your browser settings.',
+        intent,
       );
-    } else {
-      console.warn('Geolocation not supported by this browser.');
+      return;
     }
+
+    const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+    if (!window.isSecureContext && !isLocalhost) {
+      this.handleGeolocationFailure(
+        'Location access requires a secure HTTPS connection. Please select a clinic manually.',
+        intent,
+      );
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      this.handleGeolocationFailure(
+        'This browser does not support location access. Please select a clinic manually.',
+        intent,
+      );
+      return;
+    }
+
+    const operationId = ++this.geolocationOperationId;
+    this.isGeoLoading.set(true);
+    this.geoError.set(null);
+    if (intent === 'booking') {
+      this.bookingIntentActive.set(true);
+      this.activeTab.set('all');
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (this.destroyed || operationId !== this.geolocationOperationId) return;
+        const { latitude, longitude } = position.coords;
+        if (calculateDistanceMiles(latitude, longitude, latitude, longitude) === null) {
+          this.handleGeolocationFailure(
+            'Your browser returned an invalid location. Please select a clinic manually.',
+            intent,
+          );
+          return;
+        }
+
+        this.userLocation.set({ lat: latitude, lng: longitude });
+        this.isGeoLoading.set(false);
+
+        if (intent === 'booking') {
+          const nearest = this.getNearestClinic(latitude, longitude);
+          if (nearest) this.selectClinic(nearest);
+        }
+      },
+      (error) => {
+        if (this.destroyed || operationId !== this.geolocationOperationId) return;
+        if (error.code === 1) this.locationPermissionDenied = true;
+        const message =
+          error.code === 1
+            ? 'Location permission was denied. Select a clinic manually or enable location access in your browser settings.'
+            : error.code === 3
+              ? 'Location lookup timed out. Please try again or select a clinic manually.'
+              : 'Your location is currently unavailable. Please try again or select a clinic manually.';
+        this.handleGeolocationFailure(message, intent);
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+    );
+  }
+
+  private handleGeolocationFailure(message: string, intent: GeolocationIntent): void {
+    this.isGeoLoading.set(false);
+    this.userLocation.set(null);
+    this.geoError.set(message);
+    if (intent === 'booking') {
+      this.bookingIntentActive.set(true);
+      this.activeTab.set('all');
+      this.selectedClinicId.set('');
+      this.expandedClinicId.set('');
+    }
+  }
+
+  private getNearestClinic(latitude: number, longitude: number): ClinicLocation | undefined {
+    return this.rawClinics()
+      .map((clinic) => ({
+        clinic,
+        distance: calculateDistanceMiles(latitude, longitude, clinic.lat, clinic.lng),
+      }))
+      .filter(
+        (entry): entry is { clinic: ClinicLocation; distance: number } => entry.distance !== null,
+      )
+      .sort((a, b) => a.distance - b.distance)[0]?.clinic;
+  }
+
+  private consumeBookingIntent(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { intent: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   // Helper calculation for simulated SVG map scaling
@@ -1661,33 +1990,44 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.rawClinics().find((c) => c.id === this.selectedClinicId());
   }
 
+  protected getSelectedClinicDistance(): number | undefined {
+    const selected = this.getSelectedClinic();
+    const location = this.userLocation();
+    if (!selected || !location) return undefined;
+    return (
+      calculateDistanceMiles(location.lat, location.lng, selected.lat, selected.lng) ?? undefined
+    );
+  }
+
+  protected getValidReserveUrl(clinic: ClinicLocation): string | null {
+    if (!clinic.reserveUrl) return null;
+    try {
+      const url = new URL(clinic.reserveUrl);
+      return url.protocol === 'https:' && url.hostname === 'www.clockwisemd.com' ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
+
   // Handle active selected clinic click
   protected selectClinic(clinic: ClinicLocation, event?: Event): void {
     this.selectedClinicId.set(clinic.id);
     this.expandedClinicId.set(clinic.id);
 
-    // If Google Map is initialized, center it around the selected clinic coordinates and zoom in
-    if (this.googleMap) {
-      this.googleMap.setCenter({ lat: clinic.lat, lng: clinic.lng });
-      this.googleMap.setZoom(12);
+    if (this.leafletModule) {
+      this.mapMarkers.forEach((marker, clinicId) => {
+        marker.setIcon(this.createClinicIcon(this.leafletModule!, clinicId === clinic.id));
+      });
     }
 
-    // If real Google Map is active, open the info window
-    if (this.googleMap && !this.useFallbackMap()) {
-      const markerObj = this.mapMarkers.find((m) => m.clinicId === clinic.id);
-      if (markerObj) {
-        this.openInfoWindow(markerObj.marker, clinic);
-      }
+    if (this.leafletMap && this.isMapVisible()) {
+      this.leafletMap.setView([clinic.lat, clinic.lng], 12);
+      this.mapMarkers.get(clinic.id)?.openPopup();
     }
 
     // Scroll card into view smoothly on desktop if selected from map
     if (!event && isPlatformBrowser(this.platformId)) {
-      setTimeout(() => {
-        const el = document.getElementById(`clinic-card-${clinic.id}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 100);
+      this.schedule(() => this.scrollClinicIntoView(clinic.id, 'nearest'), 100);
     }
   }
 
@@ -1705,212 +2045,183 @@ export class LocationsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private checkViewport(): void {
     this.isMobileTablet.set(window.innerWidth <= 1100);
+    this.schedule(() => {
+      if (this.leafletMap && this.isMapVisible()) this.leafletMap.invalidateSize(false);
+    });
   }
 
-  // Load Google Maps script dynamically
-  private loadGoogleMapsApi(): void {
-    if (this.googleMapsLoadStarted) return;
-    this.googleMapsLoadStarted = true;
+  protected showMapView(): void {
+    this.activeStep.set('map');
+    this.schedule(() => {
+      if (!this.leafletMap) {
+        void this.loadLeafletMap();
+        return;
+      }
+      this.leafletMap.invalidateSize(false);
+      this.fitMapToClinics(this.filteredClinics());
+    });
+  }
 
-    // An empty key intentionally keeps the fallback map without contacting Google.
-    if (!environment.googleMapsApiKey.trim()) return;
+  protected retryMap(): void {
+    this.mapLoadStarted = false;
+    this.useFallbackMap.set(false);
+    this.mapStatus.set('idle');
+    this.mapError.set('The interactive map could not be loaded. Please use the clinic list.');
+    void this.loadLeafletMap();
+  }
 
-    // Check if google maps script is already on page
-    const win = window as unknown as GoogleMapsWindow;
-    if (typeof window !== 'undefined' && win.google && win.google.maps) {
-      this.initGoogleMap();
+  private async loadLeafletMap(): Promise<void> {
+    if (
+      !isPlatformBrowser(this.platformId) ||
+      this.destroyed ||
+      this.mapLoadStarted ||
+      this.leafletMap
+    ) {
       return;
     }
 
-    // Attempt to load Google Maps; the fallback stays active if the script fails.
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&callback=initGoogleMapStatic&loading=async`;
-    script.async = true;
-    script.defer = true;
+    const container = this.mapContainer()?.nativeElement;
+    if (!container || (this.isMobileTablet() && this.activeStep() !== 'map')) return;
 
-    // Attach global callback
-    win.initGoogleMapStatic = () => {
-      this.initGoogleMap();
-    };
-
-    script.onerror = () => {
-      console.warn('Google Maps API failed to load. Falling back to Simulated Map.');
-      this.useFallbackMap.set(true);
-    };
-
-    document.head.appendChild(script);
-
-    // Safety timeout: If callback hasn't fired in 4 seconds, verify fallback is fully active
-    setTimeout(() => {
-      if (this.useFallbackMap() && !this.googleMap) {
-        this.useFallbackMap.set(true);
-      }
-    }, 4000);
-  }
-
-  private initGoogleMap(): void {
-    const el = this.mapContainer()?.nativeElement;
-    if (!el || !isPlatformBrowser(this.platformId)) return;
-
+    this.mapLoadStarted = true;
+    this.mapStatus.set('loading');
+    this.useFallbackMap.set(false);
+    const operationId = ++this.mapOperationId;
     try {
-      const chicagoCenter = { lat: 41.8781, lng: -87.6298 };
+      const leafletImport = await import('leaflet');
+      if (this.destroyed || operationId !== this.mapOperationId) return;
 
-      // Initialize Map
-      const win = window as unknown as GoogleMapsWindow;
-      if (win.google?.maps?.Map) {
-        this.googleMap = new win.google.maps.Map(el, {
-          center: chicagoCenter,
-          zoom: 9,
-          styles: this.getPremiumMapStyles(),
-          mapId: 'DEMO_MAP_ID', // Required for AdvancedMarkerElement
-          disableDefaultUI: false,
-          zoomControl: true,
-          mapTypeControl: false,
-          scaleControl: true,
-          streetViewControl: false,
-          rotateControl: false,
-          fullscreenControl: false,
-        });
-      }
+      const defaultLeaflet = (leafletImport as unknown as { default?: typeof import('leaflet') })
+        .default;
+      const leaflet =
+        typeof leafletImport.map === 'function'
+          ? leafletImport
+          : defaultLeaflet && typeof defaultLeaflet.map === 'function'
+            ? defaultLeaflet
+            : leafletImport;
 
-      this.useFallbackMap.set(false);
-      this.updateGoogleMapMarkers(this.filteredClinics());
-    } catch (err) {
-      console.warn('Error constructing Google Map object:', err);
-      this.useFallbackMap.set(true);
-    }
-  }
-
-  private async updateGoogleMapMarkers(clinics: ClinicLocation[]): Promise<void> {
-    if (!this.googleMap) return;
-
-    // Clear existing markers
-    this.mapMarkers.forEach((m) => {
-      const markerEl = m.marker as Record<string, unknown>;
-      markerEl['map'] = null;
-    });
-    this.mapMarkers = [];
-
-    try {
-      const win = window as unknown as GoogleMapsWindow;
-      if (!win.google?.maps?.importLibrary) return;
-
-      const markerLib = (await win.google.maps.importLibrary('marker')) as Record<
-        string,
-        new (options: Record<string, unknown>) => {
-          map: unknown;
-          addListener(event: string, cb: () => void): void;
-        }
-      >;
-      const AdvancedMarkerElement = markerLib['AdvancedMarkerElement'];
-      const PinElement = markerLib['PinElement'];
-
-      clinics.forEach((clinic) => {
-        const pin = new PinElement({
-          background: '#365873',
-          borderColor: '#FFFFFF',
-          glyphColor: '#FFFFFF',
-          scale: 0.8,
-        });
-
-        const marker = new AdvancedMarkerElement({
-          position: { lat: clinic.lat, lng: clinic.lng },
-          map: this.googleMap,
-          title: clinic.name,
-          content: pin,
-        });
-
-        // Attach click handlers
-        marker.addListener('gmp-click', () => {
-          this.selectClinic(clinic);
-        });
-
-        this.mapMarkers.push({ clinicId: clinic.id, marker: marker as { map: unknown } });
+      this.leafletModule = leaflet;
+      this.leafletMap = leaflet.map(container, {
+        center: [41.7, -87.7],
+        zoom: 7,
+        zoomControl: true,
+        attributionControl: true,
       });
-    } catch (err) {
-      console.warn('Error creating advanced markers:', err);
+      const tileLayer = leaflet.tileLayer(MAP_TILE_CONFIG.url, {
+        attribution: MAP_TILE_CONFIG.attribution,
+        maxZoom: MAP_TILE_CONFIG.maxZoom,
+      });
+      tileLayer.on('tileerror', () => this.tileError.set(true));
+      tileLayer.addTo(this.leafletMap);
+      this.markerLayer = leaflet.layerGroup().addTo(this.leafletMap);
+      this.mapStatus.set('ready');
+      this.updateLeafletMarkers(this.filteredClinics());
+      this.schedule(() => this.leafletMap?.invalidateSize(false));
+    } catch {
+      if (this.destroyed || operationId !== this.mapOperationId) return;
+      this.mapLoadStarted = false;
+      this.mapStatus.set('error');
+      this.useFallbackMap.set(true);
+      this.mapError.set(
+        'The interactive map could not be loaded. The clinic list and booking links are still available.',
+      );
     }
   }
 
-  private openInfoWindow(marker: unknown, clinic: ClinicLocation): void {
-    if (this.activeInfoWindow) {
-      this.activeInfoWindow.close();
+  private updateLeafletMarkers(clinics: ClinicLocation[]): void {
+    const leaflet = this.leafletModule;
+    if (!leaflet || !this.leafletMap || !this.markerLayer) return;
+
+    this.markerLayer.clearLayers();
+    this.mapMarkers.clear();
+
+    if (
+      this.selectedClinicId() &&
+      !clinics.some((clinic) => clinic.id === this.selectedClinicId())
+    ) {
+      this.leafletMap.closePopup();
+      this.selectedClinicId.set('');
+      this.expandedClinicId.set('');
     }
 
-    // Premium custom styled info card HTML for maps overlay
-    const contentString = `
-      <div style="font-family: 'Inter', sans-serif; padding: 12px; max-width: 220px; color: #211E0D;">
-        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; margin: 0 0 6px 0; font-weight: 700;">${clinic.name}</h3>
-        <p style="font-size: 0.95rem; margin: 0 0 10px 0; color: #5B5656; font-weight: 600;">${clinic.address}</p>
-        <a href="${clinic.reserveUrl}" target="_blank" rel="noopener noreferrer" style="color: #365873; font-weight: 700;">SAVE MY SPOT</a>
-      </div>
-    `;
+    clinics.forEach((clinic) => {
+      const marker = leaflet.marker([clinic.lat, clinic.lng], {
+        icon: this.createClinicIcon(leaflet, clinic.id === this.selectedClinicId()),
+        keyboard: true,
+        title: `${clinic.name} clinic`,
+        alt: `View ${clinic.name} clinic`,
+        riseOnHover: true,
+      });
+      marker.bindPopup(this.createPopupContent(clinic), {
+        maxWidth: 280,
+        className: 'local-md-map-popup',
+      });
+      marker.on('click', () => this.selectClinic(clinic));
+      marker.addTo(this.markerLayer!);
+      this.mapMarkers.set(clinic.id, marker);
+    });
 
-    const win = window as unknown as GoogleMapsWindow;
-    if (win.google?.maps?.InfoWindow) {
-      this.activeInfoWindow = new win.google.maps.InfoWindow({
-        content: contentString,
-      }) as { close(): void; open(map: unknown, marker: unknown): void };
+    this.fitMapToClinics(clinics);
+  }
 
-      this.activeInfoWindow.open(this.googleMap, marker);
+  private createClinicIcon(leaflet: typeof import('leaflet'), selected: boolean): Leaflet.DivIcon {
+    return leaflet.divIcon({
+      className: 'local-md-marker-wrapper',
+      html: `<span class="local-md-marker${selected ? ' is-selected' : ''}" aria-hidden="true"></span>`,
+      iconSize: selected ? [30, 30] : [24, 24],
+      iconAnchor: selected ? [15, 15] : [12, 12],
+      popupAnchor: [0, -14],
+    });
+  }
+
+  private createPopupContent(clinic: ClinicLocation): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'local-md-popup-content';
+
+    const heading = document.createElement('h3');
+    heading.textContent = clinic.name;
+    wrapper.appendChild(heading);
+
+    const address = document.createElement('p');
+    address.textContent = clinic.address;
+    wrapper.appendChild(address);
+
+    const reserveUrl = this.getValidReserveUrl(clinic);
+    if (reserveUrl) {
+      const link = document.createElement('a');
+      link.href = reserveUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'SAVE MY SPOT';
+      wrapper.appendChild(link);
     }
+    return wrapper;
   }
 
-  // Haversine great-circle distance algorithm in miles
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 3958.8; // Earth radius in miles
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) *
-        Math.cos(this.deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+  private fitMapToClinics(clinics: ClinicLocation[]): void {
+    if (!this.leafletModule || !this.leafletMap || clinics.length === 0) return;
+    const bounds = this.leafletModule.latLngBounds(
+      clinics.map((clinic) => [clinic.lat, clinic.lng] as [number, number]),
+    );
+    this.leafletMap.fitBounds(bounds, { padding: [32, 32], maxZoom: 10 });
   }
 
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
+  private isMapVisible(): boolean {
+    return !this.isMobileTablet() || this.activeStep() === 'map';
   }
 
-  // Curated Sleek Minimalist Map Theme Styles (Silver theme)
-  private getPremiumMapStyles(): Record<string, unknown>[] {
-    return [
-      { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
-      { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-      { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
-      { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
-      {
-        featureType: 'administrative.land_parcel',
-        elementType: 'labels.text.fill',
-        stylers: [{ color: '#bdbdbd' }],
-      },
-      { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#eeeeee' }] },
-      { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-      { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5e5e5' }] },
-      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
-      {
-        featureType: 'road.arterial',
-        elementType: 'labels.text.fill',
-        stylers: [{ color: '#757575' }],
-      },
-      { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dadada' }] },
-      {
-        featureType: 'road.highway',
-        elementType: 'labels.text.fill',
-        stylers: [{ color: '#616161' }],
-      },
-      {
-        featureType: 'road.local',
-        elementType: 'labels.text.fill',
-        stylers: [{ color: '#9e9e9e' }],
-      },
-      { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#e5e5e5' }] },
-      { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#eeeeee' }] },
-      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9c9c9' }] },
-      { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
-    ];
+  private scrollClinicIntoView(id: string, block: ScrollLogicalPosition): void {
+    document.getElementById(`clinic-card-${id}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block,
+    });
+  }
+
+  private schedule(callback: () => void, delay = 0): void {
+    const timer = setTimeout(() => {
+      this.pendingTimers.delete(timer);
+      if (!this.destroyed) callback();
+    }, delay);
+    this.pendingTimers.add(timer);
   }
 }

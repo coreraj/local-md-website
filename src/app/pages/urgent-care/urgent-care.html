@@ -8,7 +8,12 @@
     [backgroundImage]="'assets/urgent_care_hero.webp'"
   >
     <div class="hero-actions">
-      <a routerLink="/locations" class="primary-btn hero-btn" i18n="@@header.cta.saveMySpot">
+      <a
+        routerLink="/locations"
+        [queryParams]="{ intent: 'nearest' }"
+        class="primary-btn hero-btn"
+        i18n="@@header.cta.saveMySpot"
+      >
         SAVE MY SPOT
       </a>
     </div>
@@ -134,5 +139,6 @@
     buttonText="SAVE MY SPOT"
     i18n-buttonText="@@header.cta.saveMySpot"
     buttonLink="/locations"
+    [buttonQueryParams]="{ intent: 'nearest' }"
   ></app-cta-banner>
 </div>

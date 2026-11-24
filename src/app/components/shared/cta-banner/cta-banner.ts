@@ -13,4 +13,5 @@ export class CtaBannerComponent {
   description = input.required<string>();
   buttonText = input.required<string>();
   buttonLink = input.required<string>();
+  buttonQueryParams = input<Record<string, string> | null>(null);
 }

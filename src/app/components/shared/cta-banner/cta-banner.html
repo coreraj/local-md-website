@@ -3,7 +3,7 @@
     <div class="cta-banner-card">
       <h2 class="cta-banner-title">{{ title() }}</h2>
       <p class="cta-banner-desc">{{ description() }}</p>
-      <a [routerLink]="buttonLink()" class="cta-banner-btn">
+      <a [routerLink]="buttonLink()" [queryParams]="buttonQueryParams()" class="cta-banner-btn">
         {{ buttonText() }}
       </a>
     </div>

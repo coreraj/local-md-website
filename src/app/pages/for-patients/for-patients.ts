@@ -67,7 +67,11 @@ interface FaqItem {
             </div>
           </a>
 
-          <a class="shortcut-card" [routerLink]="links.saveMySpot">
+          <a
+            class="shortcut-card"
+            [routerLink]="links.saveMySpot"
+            [queryParams]="{ intent: 'nearest' }"
+          >
             <div class="icon-circle">
               <app-icon name="location" [size]="36" color="#365873"></app-icon>
             </div>

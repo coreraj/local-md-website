@@ -94,7 +94,12 @@
           Save My Spot
         </a>
       } @else {
-        <a [routerLink]="saveMySpotUrl" class="btn-save-spot-solid" i18n="@@header.cta.saveMySpot">
+        <a
+          [routerLink]="saveMySpotUrl"
+          [queryParams]="{ intent: 'nearest' }"
+          class="btn-save-spot-solid"
+          i18n="@@header.cta.saveMySpot"
+        >
           Save My Spot
         </a>
       }
@@ -170,7 +175,11 @@
     >
       TEST RESULTS
     </a>
-    <a [href]="saveMySpotUrl" target="_blank" rel="noopener noreferrer" class="btn-save-spot-solid">
+    <a
+      [routerLink]="saveMySpotUrl"
+      [queryParams]="{ intent: 'nearest' }"
+      class="btn-save-spot-solid"
+    >
       SAVE MY SPOT
     </a>
     <div class="pay-bill-dropdown">
