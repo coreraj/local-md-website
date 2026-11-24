@@ -167,9 +167,16 @@
       </div>
 
       <!-- 3x2 Grid for lines of care -->
-      <div class="care-lines-grid">
+      <p class="mobile-carousel-hint" id="care-carousel-hint">Swipe to explore all services</p>
+      <div
+        class="care-lines-grid"
+        role="list"
+        tabindex="0"
+        aria-label="Local MD services"
+        aria-describedby="care-carousel-hint"
+      >
         <!-- Card 1: Urgent Care -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -189,7 +196,7 @@
         </div>
 
         <!-- Card 2: Primary Care -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -210,7 +217,7 @@
         </div>
 
         <!-- Card 3: Occupational Health -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -235,7 +242,7 @@
         </div>
 
         <!-- Card 4: Lab & Diagnostics -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -260,7 +267,7 @@
         </div>
 
         <!-- Card 5: Injury Care (DME) -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -281,7 +288,7 @@
         </div>
 
         <!-- Card 6: For Patients -->
-        <div class="care-line-card">
+        <div class="care-line-card" role="listitem">
           <div class="left-crimson-bar"></div>
           <div class="care-card-content">
             <div class="care-card-icon-col">
@@ -344,9 +351,18 @@
         </div>
 
         <!-- Locations Grid Display -->
-        <div class="locations-grid">
+        <p class="mobile-carousel-hint" id="locations-carousel-hint">
+          Swipe to explore all 10 clinics
+        </p>
+        <div
+          class="locations-grid"
+          role="list"
+          tabindex="0"
+          aria-label="Local MD clinic locations"
+          aria-describedby="locations-carousel-hint"
+        >
           @for (loc of filteredLocations(); track loc.id) {
-            <div class="location-card">
+            <div class="location-card" role="listitem">
               <span class="loc-state" [class.indiana-state]="loc.state === 'Indiana'">{{
                 loc.state
               }}</span>

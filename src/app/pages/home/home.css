@@ -310,6 +310,10 @@
   gap: 32px;
 }
 
+.mobile-carousel-hint {
+  display: none;
+}
+
 .care-line-card {
   background-color: var(--white);
   border: 2px solid #8c8c8c;
@@ -877,6 +881,14 @@
     padding: 40px 0;
   }
 
+  .locations-section {
+    padding: 40px 0;
+  }
+
+  .locations-defer-placeholder {
+    min-height: 420px;
+  }
+
   .section-header {
     gap: 10px;
     margin-bottom: 24px;
@@ -918,13 +930,37 @@
   }
 
   .care-lines-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    margin-top: 24px;
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(268px, min(82vw, 380px));
+    gap: 12px;
+    margin: 0 -16px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .care-lines-grid::-webkit-scrollbar,
+  .locations-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .care-lines-grid:focus-visible,
+  .locations-grid:focus-visible {
+    outline: 3px solid var(--accent-crimson);
+    outline-offset: 4px;
   }
 
   .care-line-card {
-    min-height: auto;
+    min-height: 238px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .care-card-content {
@@ -943,6 +979,24 @@
     line-height: 22px;
     font-weight: 500;
     color: #5b5656;
+  }
+
+  .mobile-carousel-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -8px 0 4px;
+    color: var(--slate-blue);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .mobile-carousel-hint::after {
+    content: '→';
+    font-size: 20px;
+    line-height: 1;
   }
 
   .comparison-grid {
@@ -1036,8 +1090,19 @@
 
   .locations-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(268px, min(82vw, 340px));
+    gap: 12px;
+    margin: 0 -16px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
   .location-card {
@@ -1051,7 +1116,10 @@
     background: #ffffff;
     border: 2px solid #8c8c8c;
     border-radius: 8px;
+    min-height: 280px;
     height: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .location-card.expanded {
@@ -1136,7 +1204,7 @@
 
 @media (max-width: 560px) {
   .care-card-content {
-    flex-direction: column;
+    flex-direction: row;
     gap: 16px;
     align-items: flex-start;
   }
