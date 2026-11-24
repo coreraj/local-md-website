@@ -22,11 +22,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'weight-loss',
-    loadComponent: () =>
-      import('./pages/weight-loss/weight-loss').then((m) => m.WeightLossComponent),
-  },
-  {
     path: 'lab-diagnostics',
     loadComponent: () =>
       import('./pages/lab-diagnostics/lab-diagnostics').then((m) => m.LabDiagnosticsComponent),

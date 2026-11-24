@@ -11,7 +11,6 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'urgent-care', renderMode: RenderMode.Prerender },
   { path: 'primary-care', renderMode: RenderMode.Prerender },
   { path: 'occupational-health', renderMode: RenderMode.Prerender },
-  { path: 'weight-loss', renderMode: RenderMode.Prerender },
   { path: 'lab-diagnostics', renderMode: RenderMode.Prerender },
   { path: 'injury-care', renderMode: RenderMode.Prerender },
   { path: 'locations', renderMode: RenderMode.Prerender },
