@@ -4,7 +4,7 @@ export const environment = {
   googleMapsApiKey: '',
   links: {
     saveMySpot: '/locations',
-    payBill: 'https://careagent.io/pay/IL024',
+    payBill: 'https://careagent.io/pay/locsp',
     testResults: 'https://login.intelichart.com/localmd',
     facebook: 'https://www.facebook.com/LocalMDUrgentCare',
     instagram: 'https://www.instagram.com/localmdurgentcare/',
